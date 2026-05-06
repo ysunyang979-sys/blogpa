@@ -1,0 +1,21 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Offset Black Shadow for Neo-Brutalist pop -->
+  <polygon points="65,20 104,42.5 104,87.5 65,110 26,87.5 26,42.5" fill="black" />
+  
+  <!-- Main Cyan Hexagon Base -->
+  <polygon points="60,15 99,37.5 99,82.5 60,105 21,82.5 21,37.5" fill="#00d2ff" stroke="black" stroke-width="6" stroke-linejoin="miter"/>
+  
+  <!-- Inner Yellow Hexagon -->
+  <polygon points="60,35 77,45 77,65 60,75 43,65 43,45" fill="#f9db4a" stroke="black" stroke-width="6" stroke-linejoin="miter"/>
+  
+  <!-- Network Connection Lines (Spokes) -->
+  <line x1="60" y1="15" x2="60" y2="35" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  <line x1="99" y1="37.5" x2="77" y2="45" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  <line x1="99" y1="82.5" x2="77" y2="65" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  <line x1="60" y1="105" x2="60" y2="75" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  <line x1="21" y1="82.5" x2="43" y2="65" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  <line x1="21" y1="37.5" x2="43" y2="45" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Core Node -->
+  <circle cx="60" cy="55" r="8" fill="white" stroke="black" stroke-width="4"/>
+</svg>

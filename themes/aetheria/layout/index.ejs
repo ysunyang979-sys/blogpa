@@ -1,0 +1,124 @@
+<section id="view-home" class="view active">
+  <div class="hero">
+    <div class="hero-background-dark"></div>
+    <div class="hero-background-light"></div>
+    <div class="container hero-content">
+      <div class="badge fade-in-up">Next Generation Intelligence</div>
+      <h1 class="main-display-title fade-in-up">睁眼看世界<br></h1>
+      <p class="hero-desc fade-in-up" style="animation-delay: 0.2s;">
+        
+      </p>
+      <div class="cta-group fade-in-up" style="animation-delay: 0.4s;">
+        <a href="<%- url_for('/archives') %>" class="btn btn-primary" style="text-decoration: none;">
+          <span>立即探索</span>
+          <i data-lucide="arrow-right" style="width: 24px; height: 24px; margin-left: 12px;"></i>
+        </a>
+        
+      </div>
+    </div>
+    <div class="hero-scroll-indicator">
+      <div class="mouse"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Scrolling Marquee -->
+<div class="marquee-container">
+  <div class="marquee-content">
+    <span>LATEST UPDATES</span>
+    <span class="dot"></span>
+    <span>NEXT GEN INTELLIGENCE</span>
+    <span class="dot"></span>
+    <span>DIGITAL AESTHETICS</span>
+    <span class="dot"></span>
+    <span>FUTURE TECHNOLOGY</span>
+    <span class="dot"></span>
+    <span>LATEST UPDATES</span>
+    <span class="dot"></span>
+    <span>NEXT GEN INTELLIGENCE</span>
+    <span class="dot"></span>
+    <span>DIGITAL AESTHETICS</span>
+    <span class="dot"></span>
+    <span>FUTURE TECHNOLOGY</span>
+    <span class="dot"></span>
+  </div>
+</div>
+
+<!-- Featured Posts in Home -->
+<section class="features container" style="padding: var(--spacing-xl) 0;">
+  <div class="section-head" style="margin-bottom: 6rem;">
+    <div class="badge">Editorial Selection</div>
+    <h2 class="section-title">精选博文</h2>
+    <p style="color: var(--text-dim); max-width: 600px; margin: 2rem auto 0; font-size: 1.1rem; line-height: 1.6;">探索数字美学与技术前沿的交汇点，深入解析未来科技的感官逻辑</p>
+  </div>
+  <div class="feature-grid">
+    <% site.posts.sort('date', -1).limit(3).forEach(function(post, index){ %>
+      <a href="<%- url_for(post.path) %>" class="feature-card glass <%- index === 0 ? 'featured-banner' : '' %>" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; --delay: <%= index * 0.1 %>s; transition-delay: var(--delay);">
+        <% if (post.cover) { %>
+          <div class="card-image-wrap">
+            <img src="<%- url_for(post.cover) %>" alt="<%- post.title %>" loading="lazy" onerror="this.src='https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images&rand=<%= index %>'">
+          </div>
+        <% } else { %>
+          <div class="card-image-wrap" style="display: flex; align-items: center; justify-content: center; background: var(--secondary);">
+             <i data-lucide="<%- post.icon || 'zap' %>" style="width: 64px; height: 64px; color: var(--black);"></i>
+          </div>
+        <% } %>
+        <div class="card-content">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <div class="card-icon-wrap" style="width: 48px; height: 48px;">
+                <i data-lucide="<%- post.icon || 'zap' %>" style="width: 24px; height: 24px;"></i>
+              </div>
+              <% if (post.tags && post.tags.length) { %>
+                <span class="card-tag"># <%- post.tags.data[0].name %></span>
+              <% } %>
+            </div>
+            <span class="card-date"><%- date(post.date, 'MMM DD, YYYY') %></span>
+          </div>
+          <h3 class="card-title" style="margin-top: 0;"><%- post.title %></h3>
+          <p class="card-excerpt"><%- post.excerpt || strip_html(post.content).substring(0, 100) + '...' %></p>
+          <div class="card-footer" style="margin-top: auto; padding-top: 1rem;">
+            <span>READ STORY</span>
+            <i data-lucide="arrow-right"></i>
+          </div>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item glass">
+        <span class="stat-num">24/7</span>
+        <span class="stat-label">AI MONITORING</span>
+      </div>
+      <div class="stat-item glass" style="background: var(--primary);">
+        <span class="stat-num">99%</span>
+        <span class="stat-label">UPTIME STATUS</span>
+      </div>
+      <div class="stat-item glass" style="background: var(--accent);">
+        <span class="stat-num">1.2M</span>
+        <span class="stat-label">DATA POINTS</span>
+      </div>
+      <div class="stat-item glass" style="background: var(--secondary);">
+        <span class="stat-num">∞</span>
+        <span class="stat-label">POSSIBILITIES</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action -->
+<section class="newsletter container" style="margin-top: var(--spacing-xl);">
+  <div class="newsletter-card glass" style="background: var(--primary); padding: 5rem; text-align: center;">
+    <h2 style="font-size: 3.5rem; margin-bottom: 1rem;">加入未来计划</h2>
+    <p style="font-weight: 800; margin-bottom: 3rem; text-transform: uppercase;">订阅最新的科技周报与设计灵感</p>
+    <div style="display: flex; gap: 1rem; max-width: 600px; margin: 0 auto;">
+      <input type="email" placeholder="YOUR@EMAIL.COM" class="glass" style="flex: 1; padding: 1.2rem; border-radius: 0; font-weight: 800;">
+      <button class="btn btn-primary" style="background: var(--black) !important; color: var(--white) !important; padding: 0 3rem;">JOIN</button>
+    </div>
+  </div>
+</section>

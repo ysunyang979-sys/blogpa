@@ -1,0 +1,52 @@
+<section id="view-tag" class="view" style="padding-top: var(--spacing-xl);">
+  <div class="container">
+    <div class="section-head" style="margin-bottom: 4rem;">
+      <div class="badge">Tag</div>
+      <h2 class="section-title"># <%- page.tag %></h2>
+      <p style="color: var(--text-dim); font-size: 1.1rem; font-weight: 600;">浏览包含此标签的所有博文</p>
+    </div>
+    
+    <div class="feature-grid">
+      <% page.posts.forEach(function(post){ %>
+        <a href="<%- url_for(post.path) %>" class="feature-card glass" style="text-decoration: none; color: inherit;">
+          <% if (post.cover) { %>
+            <div class="card-image-wrap">
+              <img src="<%- url_for(post.cover) %>" alt="<%- post.title %>" onerror="this.src='https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images&rand=<%= post.title %>'">
+            </div>
+          <% } else { %>
+            <div class="card-image-wrap" style="display: flex; align-items: center; justify-content: center; background: var(--primary);">
+               <i data-lucide="<%- post.icon || 'zap' %>" style="width: 64px; height: 64px; color: var(--black);"></i>
+            </div>
+          <% } %>
+          <div class="card-content">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+              <div class="card-icon-wrap" style="width: 40px; height: 40px;">
+                <i data-lucide="<%- post.icon || 'zap' %>" style="width: 20px; height: 20px;"></i>
+              </div>
+              <% if (post.tags && post.tags.length) { %>
+                <span class="card-tag"># <%- post.tags.data[0].name %></span>
+              <% } %>
+            </div>
+            <h3 class="card-title" style="font-size: 1.4rem; margin-top: 0;"><%- post.title %></h3>
+            <p class="card-excerpt" style="font-size: 0.9rem; margin-top: 0.5rem;"><%- post.excerpt || strip_html(post.content).substring(0, 100) + '...' %></p>
+            <div class="card-footer" style="margin-top: auto; padding-top: 1rem;">
+              <span>EXPLORE</span>
+              <i data-lucide="arrow-right"></i>
+            </div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+
+    <!-- Pagination -->
+    <% if (page.total > 1){ %>
+      <nav id="pagination" style="margin-top: 4rem; display: flex; gap: 1rem; justify-content: center;">
+        <%- paginator({
+          prev_text: '<i data-lucide="chevron-left"></i>',
+          next_text: '<i data-lucide="chevron-right"></i>',
+          escape: false
+        }) %>
+      </nav>
+    <% } %>
+  </div>
+</section>

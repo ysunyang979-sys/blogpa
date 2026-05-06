@@ -1,0 +1,77 @@
+<section id="view-tags-index" class="view" style="padding-top: var(--spacing-xl);">
+  <div class="container">
+    <div class="section-head" style="margin-bottom: 4rem;">
+      <div class="badge">Discovery</div>
+      <h2 class="section-title">探索主题</h2>
+      <p style="color: var(--text-dim); font-size: 1.1rem; font-weight: 600;">通过不同的标签发现你感兴趣的内容</p>
+    </div>
+    
+    <div class="tags-cloud-container glass" style="padding: 4rem 3rem; border-radius: 0;">
+      <div class="tags-cloud">
+        <% 
+          const colors = ['var(--primary)', 'var(--secondary)', 'var(--accent)', '#ff90e8', '#f9db4a', '#00e1ff', '#b4f94a'];
+          site.tags.forEach(function(tag, index){ 
+            const color = colors[index % colors.length];
+        %>
+          <a href="<%- url_for(tag.path) %>" class="cloud-tag" style="--tag-color: <%= color %>">
+            <span class="tag-name"># <%- tag.name %></span>
+            <span class="tag-count"><%- tag.posts.length %></span>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+  }
+  
+  .cloud-tag {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    background: var(--white);
+    border: var(--border-width) solid var(--black);
+    border-radius: 0;
+    text-decoration: none;
+    transition: all 0.3s var(--cubic-bezier);
+    color: var(--black);
+    box-shadow: 6px 6px 0px 0px var(--black);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .cloud-tag:hover {
+    background: var(--tag-color);
+    transform: translate(-4px, -4px) rotate(-1deg);
+    box-shadow: 10px 10px 0px 0px var(--black);
+  }
+  
+  .tag-name {
+    font-weight: 900;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+  }
+  
+  .tag-count {
+    font-size: 0.85rem;
+    background: var(--black);
+    color: var(--white);
+    padding: 0.3rem 0.8rem;
+    border: 2px solid var(--black);
+    font-weight: 900;
+  }
+
+  .cloud-tag:hover .tag-count {
+    background: var(--white);
+    color: var(--black);
+  }
+</style>
+

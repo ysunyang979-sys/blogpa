@@ -1,0 +1,1998 @@
+<article id="view-post" class="view post-container">
+  <canvas id="post-dna-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; opacity: 0.2; pointer-events: none; transition: opacity 1s ease;"></canvas>
+  
+  <script>
+    (function() {
+        const canvas = document.getElementById('post-dna-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const title = "<%- page.title %>";
+        
+        // Seeded random based on title hash
+        let hash = 0;
+        for (let i = 0; i < title.length; i++) {
+            hash = title.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const seed = Math.abs(hash);
+        const hue = seed % 360;
+
+        let w, h;
+        const particles = [];
+        const particleCount = 60;
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.init();
+            }
+            init() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 3 + 1;
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${hue}, 70%, 60%, ${this.alpha})`;
+                ctx.fill();
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.init();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            if (localStorage.getItem('aetheria_dna_active') === 'false') {
+                canvas.style.display = 'none';
+                return;
+            } else {
+                canvas.style.display = 'block';
+            }
+
+            ctx.clearRect(0, 0, w, h);
+            
+            // Draw connections (Neural web feel)
+            ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.1)`;
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    })();
+  </script>
+  <div class="post-hero">
+    <% if (page.cover) { %>
+      <img src="<%- url_for(page.cover) %>" alt="Cover" class="hero-image" onerror="this.src='https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images&rand=<%= page.title %>'">
+      <div class="hero-overlay"></div>
+    <% } %>
+  </div>
+
+  <header class="post-header">
+    <div class="header-content container">
+      <div class="badge fade-in-up" style="background: var(--accent);"><%- page.tags?.data[0]?.name || 'EDITORIAL' %></div>
+      <h1 class="main-display-title fade-in-up" style="font-size: clamp(2rem, 8vw, 4.5rem); margin-top: 1rem; color: var(--text-main);"><%- page.title %></h1>
+      
+      <div class="post-meta fade-in-up" style="animation-delay: 0.2s;">
+        <span class="meta-item"><i data-lucide="calendar"></i> <%- date(page.date, 'MMM DD, YYYY') %></span>
+        <span class="meta-divider"></span>
+        <span class="meta-item"><i data-lucide="clock"></i> <%- Math.ceil(page.content.length / 400) %> MIN READ</span>
+        <span class="meta-divider"></span>
+        <span class="meta-item" style="background: var(--primary); color: var(--bg-dark);"><i data-lucide="award"></i> ORIGINAL</span>
+        <span class="meta-divider"></span>
+        <button id="ai-focus-btn" class="meta-item focus-btn" title="AI Assisted Focus Reading" style="cursor: pointer; height: 100%;">
+          <i data-lucide="zap"></i> <span>RAPID</span>
+        </button>
+      </div>
+
+      <div id="ai-focus-summary" class="ai-focus-summary fade-in-up" style="display: none; margin: 2rem auto 0; animation-delay: 0.3s;">
+        <div class="summary-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem;">
+          <div class="summary-label" style="margin-bottom: 0;"><i data-lucide="cpu"></i> SUMMARY</div>
+          <button id="close-focus-summary" class="ai-console-btn" style="width: 24px; height: 24px; box-shadow: 2px 2px 0px 0px var(--black);" title="Close Summary"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+        </div>
+        <div id="ai-focus-text" class="summary-text">[INITIALIZING NEURAL CORE...]</div>
+        <div id="ai-focus-fallback" class="summary-fallback" style="display: none;">
+            <div class="fallback-label">KEY TAKEAWAYS:</div>
+            <ul id="fallback-list"></ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="post-body-wrapper">
+    <!-- Left Sidebar: Meta & Action -->
+    <aside class="post-sidebar-left">
+        <div class="meta-sidebar-sticky">
+            <div class="sidebar-label">WRITTEN BY</div>
+            <div class="author-info">
+                <div class="avatar-wrapper creative-avatar">
+                    <img src="<%- url_for('images/avatar.jpg') %>" class="author-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Aetheria&background=00d2ff&color=fff'" alt="Author Avatar">
+                    <div class="avatar-scanline"></div>
+                </div>
+                <div class="author-text">
+                    <div style="font-weight: 700; font-size: 1.05rem; color: var(--text-main);"><%- config.author %></div>
+                    <div style="font-size: 0.75rem; color: var(--text-dim);">Editorial Director</div>
+                </div>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-label">TAGS</div>
+            <div class="post-tags-list">
+                <% if (page.tags && page.tags.length) { %>
+                    <% page.tags.forEach(function(tag) { %>
+                        <a href="<%- url_for(tag.path) %>" class="tag-link"># <%- tag.name %></a>
+                    <% }) %>
+                <% } else { %>
+                    <span style="color: var(--text-dim); font-size: 0.8rem;">No tags</span>
+                <% } %>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-label">ACTIONS</div>
+            <div class="action-grid">
+                <button class="action-btn" id="share-post" title="Share Page"><i data-lucide="share-2"></i></button>
+                <button class="action-btn" id="bookmark-post" title="Toggle Bookmark"><i data-lucide="bookmark"></i></button>
+                <button class="action-btn" id="terminal-help-btn" title="Terminal Commands"><i data-lucide="terminal"></i></button>
+                <button class="action-btn" id="ai-chat-btn" title="AI Assistant"><i data-lucide="bot"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="post-content glass">
+      <%- page.content %>
+    </div>
+
+    <!-- Right Sidebar: TOC & AI -->
+    <aside class="post-sidebar-right">
+      <div id="toc-container" class="toc-container-sticky">
+        <div class="toc-title">OUTLINE</div>
+        <div class="toc-wrapper">
+            <%- toc(page.content, {list_number: false}) %>
+        </div>
+      </div>
+      
+      <!-- AI Panel -->
+      <div id="ai-panel" class="ai-panel-container" style="display: none;">
+        <div class="ai-marquee">
+            <div class="ai-marquee-content">
+            <span>DEVELOPER: SUNNY</span>
+            <span>SYSTEM_KERNEL: SUNNY_OS</span>
+            <span>AI_COGNITION: BEYOND_HUMAN</span>
+            <span>SYNC_STATUS: SYNCHRONIZED</span>
+            <span>NEURAL_ENGINE: CUSTOM_REVOLUTION</span>
+            <span>UPTIME: 99.999%</span>
+            <!-- 重复一遍以保证滚动平滑 -->
+            <span>DEVELOPER: SUNNY</span>
+            <span>SYSTEM_KERNEL: SUNNY_OS</span>
+            <span>AI_COGNITION: BEYOND_HUMAN</span>
+            <span>SYNC_STATUS: SYNCHRONIZED</span>
+            <span>NEURAL_ENGINE: CUSTOM_REVOLUTION</span>
+            <span>UPTIME: 99.999%</span>
+            </div>
+        </div>
+        <div class="ai-header">
+            <div class="ai-header-left">
+                <div class="ai-title"><i data-lucide="cpu"></i> Platelet <span class="ai-v-tag">sunnyos</span></div>
+                <div class="ai-controls-row">
+                    <button id="ai-reset-btn" class="ai-console-btn" title="Reset Session"><i data-lucide="plus"></i></button>
+                    <button id="ai-map-btn" class="ai-console-btn" title="Generate Neural Map"><i data-lucide="network"></i></button>
+                    <button id="ai-history-btn" class="ai-console-btn" title="View History"><i data-lucide="archive"></i></button>
+                    <button id="ai-zen-btn" class="ai-console-btn" title="Toggle Immersive Mode"><i data-lucide="maximize-2"></i></button>
+                </div>
+            </div>
+            <div class="ai-header-right">
+                <div class="ai-status-wrap">
+                    <span class="ai-dot"></span>
+                    <div id="ai-status" class="ai-status offline">OFFLINE</div>
+                </div>
+            </div>
+        </div>
+        <div id="ai-chat-log" class="ai-chat-log">
+            <div class="ai-message system">SYSTEM: WebLLM integration ready</div>
+            <button id="ai-boot-btn" class="ai-boot-btn">INITIALIZE ENGINE</button>
+        </div>
+        <div id="ai-history-panel" class="ai-history-panel" style="display: none;">
+            <div class="ai-history-header">
+                <div class="ai-history-title">ARCHIVED_SESSIONS</div>
+                <button id="clear-all-history-btn" class="history-control-btn" title="Clear All History"><i data-lucide="trash-2"></i></button>
+                <button id="close-history-btn" class="history-control-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div id="history-items-container" class="history-items-container">
+                <!-- History items will be injected here -->
+            </div>
+        </div>
+        <div class="ai-input-wrapper">
+            <input type="text" id="ai-input" placeholder="Query Neural Core..." disabled>
+            <button id="ai-send-btn" disabled><i data-lucide="send"></i></button>
+        </div>
+      </div>
+      
+      <!-- Selection Helper Button -->
+      <div id="ai-selection-helper" class="ai-selection-helper" style="display: none;">
+          <button id="ai-ask-selection-btn">
+              <i data-lucide="sparkles"></i>
+              <span>ASK PLATELET</span>
+          </button>
+          <div class="helper-arrow"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Neural Map Overlay -->
+  <div id="ai-map-overlay" class="ai-map-overlay" style="display: none;">
+      <div class="map-toolbar">
+          <div class="map-info">
+              <span class="map-label">NEURAL_STRUCTURE_MAP</span>
+              <span id="map-status" class="map-status">IDLE</span>
+          </div>
+          <div class="map-actions">
+              <button id="download-map-btn" class="map-btn" title="Export as PNG"><i data-lucide="download"></i> EXPORT_PNG</button>
+              <button id="close-map-btn" class="map-btn" title="Close"><i data-lucide="x"></i></button>
+          </div>
+      </div>
+      <div id="mermaid-container" class="mermaid-container">
+          <!-- Mermaid SVG will be rendered here -->
+      </div>
+      <div class="map-scanline"></div>
+  </div>
+</article>
+
+<style>
+  .post-hero {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: var(--primary);
+    overflow: hidden;
+    border-bottom: var(--border-width) solid var(--black);
+  }
+
+  #view-post {
+    max-width: 1600px;
+    margin: 0 auto;
+    background: var(--white);
+    position: relative;
+  }
+
+  .hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.9);
+  }
+
+  .hero-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to bottom, rgba(244, 244, 240, 0) 0%, var(--white) 100%);
+    pointer-events: none;
+  }
+
+  .post-header { 
+    text-align: center; 
+    padding: 4rem 0 6rem; 
+    background: var(--white); 
+    border-bottom: var(--border-width) solid var(--black); 
+    margin-bottom: 4rem; 
+    margin-top: -100px; /* Pull up onto hero */
+    position: relative;
+    z-index: 10;
+  }
+
+  .header-content {
+    background: var(--white);
+    padding: 2.5rem;
+    display: inline-block;
+    border: var(--border-width) solid var(--black);
+    box-shadow: 12px 12px 0px 0px var(--black);
+    max-width: 90%;
+  }
+
+  .post-meta { display: flex; align-items: center; justify-content: center; gap: 1rem; color: var(--black); margin-top: 2rem; font-weight: 800; font-size: 0.9rem; flex-wrap: wrap; }
+  .meta-item { display: flex; align-items: center; gap: 0.6rem; background: var(--white); padding: 0.4rem 1rem; border: 2px solid var(--black); box-shadow: 4px 4px 0px 0px var(--black); color: inherit; }
+  .meta-item i { width: 16px; height: 16px; color: inherit; }
+  .meta-divider { width: 2px; height: 20px; background: var(--black); }
+  
+  .post-body-wrapper { 
+    display: grid; 
+    grid-template-columns: 220px 1fr 240px; 
+    gap: 3rem; 
+    align-items: flex-start; 
+    position: relative; 
+    padding-bottom: 6rem;
+    z-index: 5;
+    transition: grid-template-columns 0.3s ease;
+  }
+  
+  .post-body-wrapper.ai-active {
+    grid-template-columns: 220px 1fr 400px;
+  }
+  
+  /* Zen Mode (Immersive) - 2 Column Layout */
+  .post-body-wrapper.ai-immersive {
+    display: flex !important;
+    grid-template-columns: none !important;
+    gap: 4rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .ai-immersive .post-sidebar-left {
+    display: none;
+  }
+
+  .ai-immersive .post-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ai-immersive .post-sidebar-right {
+    width: 500px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 100px;
+  }
+
+  .ai-immersive .ai-panel-container {
+    height: 750px;
+    box-shadow: 15px 15px 0px 0px var(--black);
+    transition: all 0.4s var(--cubic-bezier);
+  }
+  
+  .post-content.glass { 
+    padding: 4rem; 
+    border-radius: 0; 
+    background: var(--bg-card);
+    border: var(--border-width) solid var(--text-main);
+    box-shadow: 12px 12px 0px 0px var(--text-main);
+  }
+  
+  /* Sidebars Sticky */
+  .post-sidebar-left, .post-sidebar-right { position: sticky; top: 120px; }
+  .meta-sidebar-sticky, .toc-container-sticky { padding-top: 1rem; }
+
+  .sidebar-label { font-weight: 900; font-size: 0.75rem; color: var(--bg-dark); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; background: var(--primary); padding: 0.2rem 0.5rem; border: 2px solid var(--black); display: inline-block; transform: rotate(-1deg); }
+  .sidebar-divider { height: var(--border-width); background: var(--black); margin: 2rem 0; width: 60px; }
+  
+  .author-info { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; padding: 1rem; border: 2px solid var(--black); background: var(--white); box-shadow: 4px 4px 0px 0px var(--black); }
+  .avatar-wrapper { 
+    width: 60px; height: 60px; border-radius: 0; padding: 0;
+    border: var(--border-width) solid var(--black);
+    background: var(--accent);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  .creative-avatar {
+    position: relative;
+    cursor: crosshair;
+  }
+  .author-avatar { 
+    width: 100%; height: 100%; border-radius: 0; object-fit: cover; 
+    transition: all 0.3s ease;
+    filter: grayscale(0%);
+  }
+  .creative-avatar:hover .author-avatar {
+    filter: grayscale(100%) contrast(200%) invert(100%);
+    transform: scale(1.1);
+  }
+  .avatar-scanline {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 4px;
+    background: rgba(0, 255, 255, 0.8);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 1);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .creative-avatar:hover .avatar-scanline {
+    opacity: 1;
+    animation: scan 1s linear infinite;
+  }
+  @keyframes scan {
+    0% { top: -10%; }
+    100% { top: 110%; }
+  }
+  .action-grid { display: flex; gap: 1rem; }
+  .action-btn { 
+    width: 48px; height: 48px; border-radius: 0; 
+    background: var(--white); border: var(--border-width) solid var(--black); 
+    color: var(--black); display: flex; align-items: center; justify-content: center; 
+    cursor: pointer; transition: all 0.2s var(--cubic-bezier);
+    box-shadow: 4px 4px 0px 0px var(--black);
+  }
+  .action-btn:hover { background: var(--secondary); transform: translate(-2px, -2px); box-shadow: 6px 6px 0px 0px var(--black); }
+  .action-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px 0px var(--black); }
+  .action-btn.active { background: var(--primary); color: var(--bg-dark); }
+
+  /* Tag Styles */
+  .post-tags-list { display: flex; flex-direction: column; gap: 1rem; }
+  .tag-link { 
+    color: var(--black); 
+    text-decoration: none; 
+    font-size: 0.9rem; 
+    font-weight: 800; 
+    transition: all 0.2s ease;
+    display: block;
+    width: fit-content;
+    padding: 0.2rem 0.6rem;
+    border: 2px solid transparent;
+  }
+  .tag-link:hover { background: var(--accent); border-color: var(--black); transform: rotate(2deg); }
+  
+  /* TOC Refinement */
+  .toc-title { font-weight: 900; font-size: 0.8rem; color: var(--bg-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2rem; position: relative; padding: 0.4rem 0.8rem; border: 2px solid var(--black); background: var(--secondary); box-shadow: 4px 4px 0px 0px var(--black); display: inline-block; }
+  
+  .toc { list-style: none; padding: 0; border-left: var(--border-width) solid var(--black); margin-left: 0.5rem;}
+  .toc-item { padding-left: 1.5rem; position: relative; margin-bottom: 1.2rem;}
+  .toc-link { text-decoration: none; color: var(--text-dim); transition: all 0.2s ease; display: block; font-size: 0.9rem; font-weight: 700;}
+  .toc-link:hover, .toc-link.active { color: var(--black); background: var(--primary); padding-left: 0.5rem; }
+  
+  @media (max-width: 1300px) {
+    .post-body-wrapper { grid-template-columns: 1fr 280px; }
+    .post-body-wrapper.ai-active { grid-template-columns: 1fr 400px; }
+    .post-sidebar-left { display: none; }
+  }
+  
+  @media (max-width: 1024px) {
+    .post-body-wrapper { grid-template-columns: 1fr; }
+    .post-sidebar-right { display: none; }
+    .post-content.glass { padding: 2rem; }
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in-up { animation: fadeInUp 0.6s var(--cubic-bezier) forwards; }
+  /* AI Image Styles */
+  .ai-image-msg { padding: 0.5rem !important; background: var(--black) !important; }
+  .ai-image-wrapper { position: relative; border: 2px solid var(--accent); overflow: hidden; }
+  .ai-generated-img { width: 100%; height: auto; display: block; opacity: 0; transition: opacity 0.5s ease; filter: grayscale(100%); }
+  .ai-generated-img.loaded { opacity: 1; filter: grayscale(0%); }
+  .ai-image-overlay {
+      position: absolute; bottom: 0; left: 0; width: 100%;
+      background: rgba(0, 0, 0, 0.8); padding: 0.5rem;
+      transform: translateY(100%); transition: transform 0.3s ease;
+      display: flex; justify-content: center;
+  }
+  .ai-image-wrapper:hover .ai-image-overlay { transform: translateY(0); }
+  .ai-image-link { color: var(--accent); font-size: 0.7rem; font-weight: 900; text-decoration: none; display: flex; align-items: center; gap: 0.4rem; }
+  .ai-image-link:hover { color: var(--white); }
+
+  .ai-header {
+      padding: 1rem 1.2rem;
+      border-bottom: 2px solid var(--black);
+      background: var(--bg-card);
+      position: relative;
+      z-index: 100;
+  }
+  .ai-header-left { display: flex; flex-direction: column; gap: 0.6rem; }
+  .ai-title { font-weight: 900; font-size: 0.9rem; color: var(--black); display: flex; align-items: center; gap: 0.5rem; }
+  .ai-v-tag { background: var(--accent); color: var(--black); padding: 0.1rem 0.4rem; font-size: 0.65rem; border: 1px solid var(--black); }
+  .ai-controls-row { display: flex; gap: 0.6rem; align-items: center; }
+  
+  .ai-console-btn {
+      width: 32px; height: 32px; border-radius: 0;
+      background: var(--primary); border: 2px solid var(--black);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s ease;
+      box-shadow: 3px 3px 0px 0px var(--black);
+      color: var(--black);
+  }
+  .ai-console-btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0px 0px var(--black); background: var(--secondary); }
+  .ai-console-btn:active { transform: translate(1px, 1px); box-shadow: 0px 0px 0px 0px var(--black); }
+  .ai-console-btn i { width: 16px; height: 16px; stroke-width: 3; }
+
+  [data-theme="hacker"] .ai-console-btn {
+      background: #000 !important;
+      color: #00ff41 !important;
+      border-color: #00ff41 !important;
+      box-shadow: 3px 3px 0px 0px #003b00 !important;
+  }
+  [data-theme="hacker"] .ai-console-btn:hover {
+      background: #003b00 !important;
+  }
+
+  /* AI History Panel — Centered Window Design */
+  .ai-history-panel {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -55%); /* Slightly higher than pure center for visual balance */
+      width: calc(100% - 30px); 
+      height: 70%;
+      background: var(--bg-card);
+      border: 3px solid var(--black);
+      z-index: 150; /* Ensure it's above everything */
+      display: flex;
+      flex-direction: column;
+      animation: slideInModal 0.4s var(--cubic-bezier);
+      box-shadow: 12px 12px 0px 0px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+  }
+  @keyframes slideInModal {
+      from { transform: translate(-50%, -45%); opacity: 0; }
+      to { transform: translate(-50%, -55%); opacity: 1; }
+  }
+  .ai-history-header {
+      padding: 1.2rem 1rem;
+      background: var(--black);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 900;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.15em;
+      border-bottom: 2px solid var(--accent);
+      min-height: 54px; /* Force enough height */
+      box-sizing: border-box;
+  }
+  .ai-history-title {
+      flex: 1;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+  }
+  .ai-history-title::before, .ai-history-title::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: rgba(0, 210, 255, 0.3);
+  }
+    #close-history-btn, #clear-all-history-btn {
+      width: 32px; height: 32px;
+      background: var(--primary);
+      border: 2px solid var(--black);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s ease;
+      box-shadow: 3px 3px 0px 0px var(--black);
+      color: var(--black);
+      padding: 0; margin-left: 0.6rem;
+      flex-shrink: 0;
+  }
+  [data-theme="hacker"] #close-history-btn {
+      color: #000 !important;
+  }
+  [data-theme="hacker"] #clear-all-history-btn {
+      color: #000 !important;
+  }
+  #clear-all-history-btn { background: #ff5e5e; } /* Red for destructive action */
+  #close-history-btn i, #clear-all-history-btn i { width: 18px; height: 18px; stroke-width: 3; }
+  #close-history-btn:hover, #clear-all-history-btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0px 0px var(--black); }
+  #clear-all-history-btn:hover { background: #ff4444; }
+  #close-history-btn:hover { background: var(--secondary); }
+  
+  .history-items-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      background: 
+          linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+      background-size: 20px 20px; /* Grid background */
+  }
+  
+  .history-item {
+      padding: 1.2rem 1rem; /* More vertical breathing room */
+      border: 2px solid var(--black);
+      background: var(--white);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s var(--cubic-bezier);
+      box-shadow: 4px 4px 0px 0px var(--black);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
+  .history-item:hover {
+      background: #f8f9fa;
+      transform: translateX(4px);
+      box-shadow: 6px 6px 0px 0px var(--black);
+  }
+  
+  .history-item-content { flex: 1; min-width: 0; }
+  
+  .history-item-meta {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center; /* Center tag and date */
+      gap: 0.8rem;
+  }
+  .history-tag {
+      background: var(--black); color: var(--accent);
+      padding: 0.2rem 0.5rem; /* Robust padding */
+      font-weight: 900;
+      font-size: 0.6rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--black);
+  }
+  
+  .history-item-preview {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--black);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: var(--font-main);
+      padding-top: 2px;
+  }
+  
+  .history-load-btn {
+      width: 50px; height: 32px;
+      background: var(--white);
+      border: 2px solid var(--black);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      margin-left: 1rem;
+      box-shadow: 2px 2px 0px 0px var(--black);
+  }
+  .history-item:hover .history-load-btn {
+      background: var(--primary);
+      color: var(--black);
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0px 0px var(--black);
+  }
+  [data-theme="hacker"] .history-item:hover .history-load-btn {
+      background: #00ff41 !important;
+      color: #000 !important;
+  }
+
+  .history-empty {
+      text-align: center;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      margin-top: 3rem;
+      letter-spacing: 0.2em;
+  }
+  
+  /* Scrollbar Fix */
+  .history-items-container::-webkit-scrollbar { width: 6px; }
+  .history-items-container::-webkit-scrollbar-track { background: transparent; }
+  .history-items-container::-webkit-scrollbar-thumb { background: var(--black); }
+  /* Selection Helper Styles */
+  .ai-selection-helper {
+      position: fixed;
+      z-index: 10000;
+      pointer-events: auto;
+      animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes popIn {
+      from { transform: scale(0.5) translateY(10px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  #ai-ask-selection-btn {
+      background: var(--primary);
+      color: var(--black);
+      border: 3px solid var(--black);
+      box-shadow: 4px 4px 0px 0px var(--black);
+      padding: 0.6rem 1rem;
+      font-family: var(--font-mono);
+      font-weight: 900;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: all 0.1s ease;
+      white-space: nowrap;
+      letter-spacing: 0.05em;
+  }
+  #ai-ask-selection-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px 0px var(--black);
+      background: var(--secondary);
+  }
+  #ai-ask-selection-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px 0px var(--black);
+  }
+  [data-theme="hacker"] #ai-ask-selection-btn {
+      background: #000 !important;
+      color: #00ff41 !important;
+      border-color: #00ff41 !important;
+      box-shadow: 4px 4px 0px 0px #003b00 !important;
+  }
+  [data-theme="hacker"] #ai-ask-selection-btn:hover {
+      background: #003b00 !important;
+  }
+  #ai-ask-selection-btn i { width: 14px; height: 14px; stroke-width: 3; }
+  .helper-arrow {
+      width: 0; height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 8px solid var(--black);
+      margin: 0 auto;
+      transform: translateY(-2px);
+  }
+
+  /* Neural Map Styles */
+  .ai-map-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(10, 10, 10, 0.98); z-index: 20000;
+      display: flex; flex-direction: column;
+      animation: fadeIn 0.3s ease;
+      backdrop-filter: blur(10px);
+  }
+  .map-toolbar {
+      padding: 1.5rem 2rem; background: var(--black); color: var(--accent);
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 2px solid var(--accent);
+  }
+  .map-info { display: flex; align-items: center; gap: 1.5rem; }
+  .map-label { font-family: var(--font-mono); font-weight: 900; letter-spacing: 0.2em; }
+  .map-status { font-size: 0.7rem; background: rgba(0,210,255,0.1); padding: 0.2rem 0.6rem; border: 1px solid var(--accent); }
+  .map-actions { display: flex; gap: 1rem; }
+  .map-btn {
+      background: var(--primary); border: 2px solid var(--black);
+      padding: 0.5rem 1rem; font-family: var(--font-mono); font-weight: 900; font-size: 0.7rem;
+      cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+      box-shadow: 4px 4px 0px 0px var(--accent); transition: all 0.2s ease;
+  }
+  .map-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px 0px var(--accent); background: var(--secondary); }
+  .map-btn:active { transform: translate(1px, 1px); box-shadow: 0px 0px 0px 0px var(--accent); }
+  .map-btn i { width: 16px; height: 16px; }
+  #close-map-btn { background: #ff5e5e; box-shadow: 4px 4px 0px 0px #880000; color: white; border-color: #880000; }
+  #close-map-btn:hover { background: #ff4444; box-shadow: 6px 6px 0px 0px #880000; }
+
+  .mermaid-container {
+      flex: 1; overflow: auto; display: flex; justify-content: center; align-items: center;
+      padding: 4rem; cursor: grab;
+  }
+  .mermaid-container:active { cursor: grabbing; }
+  .mermaid-container svg { max-width: none !important; height: auto !important; transition: transform 0.2s ease; }
+  
+  .map-scanline {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(to bottom, transparent 50%, rgba(0, 210, 255, 0.05) 50%);
+      background-size: 100% 4px; pointer-events: none; z-index: 20001;
+      opacity: 0.3; animation: scanMove 10s linear infinite;
+  }
+  @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 100%; } }
+
+  /* AI Focus Mode Styles */
+  .ai-focus-mode-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      width: 100%;
+  }
+  .focus-btn {
+      background: #00d2ff !important;
+      color: var(--black) !important;
+      border: 2px solid var(--black) !important;
+      box-shadow: 4px 4px 0px 0px var(--black) !important;
+      font-size: 0.9rem !important;
+      padding: 0.4rem 1rem !important;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      display: flex !important;
+      align-items: center;
+      gap: 0.6rem;
+  }
+  .focus-btn:hover {
+      background: #00b8e6 !important;
+      color: var(--black) !important;
+      box-shadow: 6px 6px 0px 0px var(--black) !important;
+  }
+  .focus-btn.loading {
+      opacity: 0.7;
+      cursor: wait;
+      animation: pulse 1.5s infinite;
+  }
+  .ai-focus-summary {
+      width: 100%;
+      max-width: 800px;
+      background: var(--bg-card);
+      border: 3px solid var(--black);
+      padding: 2rem;
+      text-align: left;
+      position: relative;
+      box-shadow: 12px 12px 0px 0px var(--black);
+      animation: slideDown 0.4s var(--cubic-bezier);
+  }
+  @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+  }
+  .summary-label {
+      background: var(--black);
+      color: var(--accent);
+      padding: 0.3rem 0.8rem;
+      font-family: var(--font-mono);
+      font-weight: 900;
+      font-size: 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.1em;
+  }
+  .summary-text {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: var(--text-main);
+      font-weight: 600;
+  }
+  .summary-fallback {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px dashed var(--text-dim);
+  }
+  .fallback-label {
+      font-family: var(--font-mono);
+      font-weight: 900;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-bottom: 0.8rem;
+  }
+  #fallback-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+  }
+  #fallback-list li {
+      font-size: 0.9rem;
+      color: var(--text-main);
+      padding-left: 1.2rem;
+      position: relative;
+  }
+  #fallback-list li::before {
+      content: ">";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 900;
+  }
+  
+  /* The Magic Highlight */
+  mark.neural-highlight {
+      background: linear-gradient(120deg, var(--accent) 0%, rgba(0, 210, 255, 0.4) 100%);
+      background-size: 100% 200%;
+      color: var(--black);
+      font-weight: 800;
+      padding: 0 0.2rem;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      cursor: help;
+      box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+  }
+  mark.neural-highlight:hover {
+      box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
+      transform: scale(1.02);
+  }
+</style>
+
+<!-- ============================================================
+     NEURAL CORE — 1B 模型深度优化提示词系统 v2.0
+     针对 Llama-3.2-1B-Instruct 的极限调优
+     ============================================================ -->
+
+<!-- Load marked.js, mermaid.js and oh-my-live2d -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="https://unpkg.com/oh-my-live2d@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/mark.js@8.11.1/dist/mark.min.js"></script>
+
+<script type="module">
+  import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+  document.addEventListener('DOMContentLoaded', () => {
+      const aiBtn = document.getElementById('ai-chat-btn');
+      const tocContainer = document.getElementById('toc-container');
+      const aiPanel = document.getElementById('ai-panel');
+      const bootBtn = document.getElementById('ai-boot-btn');
+      const chatLog = document.getElementById('ai-chat-log');
+      const aiInput = document.getElementById('ai-input');
+      const sendBtn = document.getElementById('ai-send-btn');
+      const statusBadge = document.getElementById('ai-status');
+      const resetBtn = document.getElementById('ai-reset-btn');
+      const historyBtn = document.getElementById('ai-history-btn');
+      const zenBtn = document.getElementById('ai-zen-btn');
+      const historyPanel = document.getElementById('ai-history-panel');
+      const historyCloseBtn = document.getElementById('close-history-btn');
+      const historyClearBtn = document.getElementById('clear-all-history-btn');
+      const historyContainer = document.getElementById('history-items-container');
+
+      // AI Focus Mode Elements
+      const focusBtn = document.getElementById('ai-focus-btn');
+      const focusSummary = document.getElementById('ai-focus-summary');
+      const focusText = document.getElementById('ai-focus-text');
+      const focusFallback = document.getElementById('ai-focus-fallback');
+      const fallbackList = document.getElementById('fallback-list');
+
+      // ── Live2D Mascot Init ──
+      window.oml2dInstance = null;
+      if (window.OML2D) {
+          try {
+              window.oml2dInstance = window.OML2D.loadOml2d({
+                  models: [
+                      {
+                          path: 'https://cdn.jsdelivr.net/gh/Auto-SK/Live2D-Models/kesshouban/model.json',
+                          position: [0, 40],
+                          scale: 0.08,
+                          stageStyle: { width: '140px', height: '180px', left: '10px', bottom: '10px' }
+                      }
+                  ],
+                  menus: { disable: true },
+                  tips: {
+                      style: {
+                          width: '150px',
+                          fontSize: '13px',
+                          lineHeight: '1.4',
+                          padding: '10px',
+                          backgroundColor: 'var(--bg-card)',
+                          border: '3px solid var(--black)',
+                          color: 'var(--text-main)',
+                          boxShadow: '4px 4px 0px 0px var(--black)',
+                          borderRadius: '0',
+                          fontFamily: 'var(--font-mono)',
+                          marginLeft: '120px',  // Adjusted leftwards per user feedback
+                          marginTop: '20px'     // Push it slightly down
+                      },
+                      offsetX: 0,
+                      offsetY: 0,
+                      messageLine: 4
+                  }
+              });
+
+              // Helper for safe message calling
+              window.showMascotMessage = (msg, duration = 1000) => {
+                  if (!window.oml2dInstance) return;
+                  if (typeof window.oml2dInstance.tips?.showMessage === 'function') {
+                      window.oml2dInstance.tips.showMessage(msg, duration, 10);
+                  } else if (typeof window.oml2dInstance.showMessage === 'function') {
+                      window.oml2dInstance.showMessage(msg, duration, 10);
+                  }
+              };
+              
+              // Wait for DOM and setup events
+              setTimeout(() => {
+                  window.showMascotMessage('你好，我是 Neural Core 的化身。点击我可展开核心面板。', 5000);
+                  
+                  const stage = document.getElementById('oml2d');
+                  if (stage) {
+                      stage.style.cursor = 'pointer';
+                      stage.style.zIndex = '999';
+                      stage.addEventListener('click', (e) => {
+                          e.stopPropagation();
+                          if (typeof toggleAIPanel === 'function') toggleAIPanel(true);
+                      });
+                  }
+              }, 1000);
+          } catch (syncErr) {
+              console.error("OML2D Sync Error:", syncErr);
+          }
+      }
+
+      // ── Ensure Left Sidebar is Above Mascot ──
+      const styleTag = document.createElement('style');
+      styleTag.textContent = `
+          .post-sidebar-left { position: relative; z-index: 9999999 !important; }
+          #ai-chat-btn { position: relative; z-index: 9999999 !important; }
+          #oml2d { pointer-events: none !important; overflow: visible !important; }
+      `;
+      document.head.appendChild(styleTag);
+
+      // ── Toggle Panel Logic ──
+      const bodyWrapper = document.querySelector('.post-body-wrapper');
+      
+      const toggleAIPanel = (forceState = null) => {
+          console.log("toggleAIPanel called with", forceState);
+          if (!aiBtn || !aiPanel) {
+              console.error("Missing aiBtn or aiPanel!", {aiBtn, aiPanel});
+              return;
+          }
+          
+          const currentState = aiBtn.classList.contains('active');
+          let newState;
+          if (forceState instanceof Event || (forceState && forceState.type)) {
+              newState = !currentState;
+          } else {
+              newState = forceState !== null ? forceState : !currentState;
+          }
+          
+          console.log("Target state:", newState);
+          
+          if (newState) {
+              aiBtn.classList.add('active');
+              if (tocContainer) tocContainer.style.display = 'none';
+              aiPanel.style.display = 'flex';
+              if (bodyWrapper) bodyWrapper.classList.add('ai-active');
+              localStorage.setItem(PANEL_STATE_KEY, 'true');
+              
+              // Auto-boot if cached and not already running
+              if (localStorage.getItem('aetheria_ai_cached') === 'true' && bootBtn && !isInitializing && !engine) {
+                  bootBtn.click();
+              }
+          } else {
+              aiBtn.classList.remove('active');
+              if (tocContainer) tocContainer.style.display = 'block';
+              aiPanel.style.display = 'none';
+              if (bodyWrapper) bodyWrapper.classList.remove('ai-active');
+              localStorage.setItem(PANEL_STATE_KEY, 'false');
+          }
+      };
+      window.toggleAIPanel = toggleAIPanel;
+
+      if (aiBtn) {
+          aiBtn.addEventListener('click', () => toggleAIPanel());
+      }
+
+      if (zenBtn) {
+          zenBtn.addEventListener('click', () => {
+              if (!bodyWrapper) return;
+              const isImmersive = bodyWrapper.classList.toggle('ai-immersive');
+              
+              // Ensure AI panel is open if entering immersive mode
+              if (isImmersive) {
+                  toggleAIPanel(true);
+                  zenBtn.innerHTML = '<i data-lucide="minimize-2"></i>';
+              } else {
+                  zenBtn.innerHTML = '<i data-lucide="maximize-2"></i>';
+              }
+              if (window.lucide) window.lucide.createIcons();
+          });
+      }
+
+      // ── WebLLM Core ──
+      let engine = null;
+      let isInitializing = false;
+      let chatHistory = [];
+      let systemMessages = []; // 系统消息单独保存，不参与裁剪
+      const modelId = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
+      const MAX_HISTORY_TURNS = 12; 
+      const cleanPath = window.location.pathname.replace(/\/$/, '') || '/';
+      const HISTORY_KEY = `aetheria_ai_history_${cleanPath}`;
+      const ARCHIVE_KEY = `aetheria_ai_archive_${cleanPath}`;
+      const PANEL_STATE_KEY = `aetheria_ai_panel_open_${cleanPath}`;
+
+      const addMessage = (role, text, isMarkdown = false) => {
+          if (!chatLog) return;
+          const msgDiv = document.createElement('div');
+          msgDiv.className = `ai-message ${role}`;
+          if (isMarkdown) {
+              msgDiv.innerHTML = marked.parse(text);
+          } else {
+              msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+          }
+          chatLog.appendChild(msgDiv);
+          chatLog.scrollTop = chatLog.scrollHeight;
+          return msgDiv;
+      };
+
+      // ── 代码块后处理：集成 AI 解释按钮 ──
+      const processCodeBlocks = (container) => {
+          if (!container) return;
+
+          // 1. 处理 Hexo 标准的 .highlight 块
+          const highlights = container.querySelectorAll('.highlight');
+          highlights.forEach((block) => {
+              if (block.querySelector('.ai-explain-btn')) return;
+
+              const explainBtn = document.createElement('button');
+              explainBtn.className = 'ai-explain-btn';
+              explainBtn.innerHTML = '<i data-lucide="sparkles"></i><span>EXPLAIN</span>';
+              
+              const copyBtn = block.querySelector('.copy-btn');
+              if (copyBtn) {
+                  block.insertBefore(explainBtn, copyBtn);
+              } else {
+                  block.appendChild(explainBtn);
+              }
+
+              explainBtn.addEventListener('click', () => {
+                  const code = block.querySelector('.code pre')?.innerText || 
+                               block.querySelector('.code')?.innerText || 
+                               block.innerText;
+                  
+                  if (typeof toggleAIPanel === 'function') toggleAIPanel(true);
+                  aiInput.value = `请帮我深入解析一下这段代码的逻辑和实现：\n\n\`\`\`\n${code.trim()}\n\`\`\``;
+                  
+                  if (!engine && bootBtn) {
+                      bootBtn.click();
+                      const checkInterval = setInterval(() => {
+                          if (engine && !isInitializing) {
+                              clearInterval(checkInterval);
+                              handleSend();
+                          }
+                      }, 500);
+                  } else if (engine) {
+                      handleSend();
+                  }
+              });
+          });
+
+          // 2. 处理 AI 消息中的 pre code (用于对话结果)
+          const preCodes = container.querySelectorAll('pre code');
+          preCodes.forEach((codeEl) => {
+              const pre = codeEl.parentElement;
+              if (pre.classList.contains('ai-processed') || pre.closest('.highlight')) return;
+              pre.classList.add('ai-processed');
+
+              const wrapper = document.createElement('div');
+              wrapper.className = 'ai-code-wrapper';
+              const toolbar = document.createElement('div');
+              toolbar.className = 'ai-code-toolbar';
+              
+              const langClass = Array.from(codeEl.classList).find(c => c.startsWith('language-'));
+              const lang = langClass ? langClass.replace('language-', '') : 'CODE';
+
+              toolbar.innerHTML = `
+                  <span class="ai-code-lang">${lang.toUpperCase()}</span>
+                  <button class="ai-code-copy">
+                      <i data-lucide="copy"></i><span>COPY</span>
+                  </button>
+              `;
+
+              pre.parentNode.insertBefore(wrapper, pre);
+              wrapper.appendChild(toolbar);
+              wrapper.appendChild(pre);
+
+              toolbar.querySelector('.ai-code-copy').onclick = () => {
+                  navigator.clipboard.writeText(codeEl.innerText).then(() => {
+                      toolbar.querySelector('span').innerText = 'COPIED!';
+                      setTimeout(() => toolbar.querySelector('span').innerText = 'COPY', 2000);
+                  });
+              };
+              
+              applySyntaxHighlight(codeEl, lang);
+          });
+          
+          if (window.lucide) window.lucide.createIcons();
+      };
+
+      // ── 轻量语法高亮引擎（纯正则，无外部依赖） ──
+      const applySyntaxHighlight = (codeEl, lang) => {
+          let html = codeEl.innerHTML;
+
+          // 保护已有的 HTML 标签
+          const preserved = [];
+          html = html.replace(/<[^>]+>/g, (match) => {
+              preserved.push(match);
+              return `__PRESERVED_${preserved.length - 1}__`;
+          });
+
+          // 通用关键词（覆盖大多数语言）
+          const keywords = 'abstract|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|if|import|in|instanceof|interface|let|new|of|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|with|yield|def|elif|except|lambda|pass|raise|print|self|True|False|None|int|str|float|list|dict|tuple|set';
+
+          // 1. 字符串（单引号、双引号、模板字符串）
+          html = html.replace(/("[^"]*"|'[^']*'|`[^`]*`)/g, '<span class="hl-string">$1</span>');
+
+          // 2. 注释（单行 // 和 #）
+          html = html.replace(/((?:^|\n)\s*)(#[^\n]*)/g, '$1<span class="hl-comment">$2</span>');
+          html = html.replace(/(\/\/[^\n]*)/g, '<span class="hl-comment">$1</span>');
+
+          // 3. 关键词
+          const kwRegex = new RegExp(`\\b(${keywords})\\b`, 'g');
+          html = html.replace(kwRegex, '<span class="hl-keyword">$1</span>');
+
+          // 4. 数字
+          html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="hl-number">$1</span>');
+
+          // 5. 函数调用
+          html = html.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, '<span class="hl-function">$1</span>');
+
+          // 还原保护的标签
+          html = html.replace(/__PRESERVED_(\d+)__/g, (_, i) => preserved[parseInt(i)]);
+
+          codeEl.innerHTML = html;
+      };
+
+      // ── 对话历史裁剪：防止 1B 模型上下文溢出导致胡言乱语 ──
+      const getTrimmedHistory = () => {
+          // 系统消息永远保留 + 最近 N 条用户/助手对话
+          if (chatHistory.length <= MAX_HISTORY_TURNS) {
+              return [...systemMessages, ...chatHistory];
+          }
+          const trimmed = chatHistory.slice(-MAX_HISTORY_TURNS);
+          return [...systemMessages, ...trimmed];
+      };
+
+      // ── Memory Logic ──
+      const saveHistory = () => {
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(chatHistory));
+      };
+
+      // ── 刷新策略：自动归档旧对话并开启新对话 ──
+      const initSessionOnLoad = () => {
+          const saved = localStorage.getItem(HISTORY_KEY);
+          if (saved) {
+              try {
+                  const history = JSON.parse(saved);
+                  const validHistory = history.filter(m => m.content);
+                  if (validHistory.length > 0) {
+                      // 将旧对话存入历史档案
+                      chatHistory = validHistory;
+                      archiveCurrentSession();
+                      // 清空当前即时历史
+                      chatHistory = [];
+                      localStorage.removeItem(HISTORY_KEY);
+                  }
+              } catch (e) { 
+                  console.error("Failed to archive old session", e); 
+              }
+          }
+      };
+
+      initSessionOnLoad();
+
+      // Restore Panel State (Keep it open if it was open)
+      if (localStorage.getItem(PANEL_STATE_KEY) === 'true') {
+          setTimeout(() => toggleAIPanel(true), 500);
+      }
+
+      if (resetBtn) {
+          resetBtn.addEventListener('click', () => {
+              if (chatHistory.length > 0) {
+                  archiveCurrentSession();
+              }
+              chatHistory = [];
+              localStorage.removeItem(HISTORY_KEY);
+              // 保留 boot 按钮和基本提示
+              chatLog.innerHTML = `<div class="ai-message system">SYSTEM: 内存已清除。对话已重置。</div>`;
+              if (bootBtn && bootBtn.style.display !== 'none') {
+                  chatLog.appendChild(bootBtn);
+              }
+          });
+      }
+
+      // ── History Management Logic ──
+      const archiveCurrentSession = () => {
+          if (chatHistory.length === 0) return;
+          const archives = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
+          
+          // Get the latest user message for the preview
+          const lastUserMsg = [...chatHistory].reverse().find(m => m.role === 'user')?.content || 'Empty Session';
+          
+          // Avoid duplicate top session (check if the last message is already in history)
+          if (archives.length > 0 && archives[0].preview === lastUserMsg && JSON.stringify(archives[0].history) === JSON.stringify(chatHistory)) return;
+
+          const newArchive = {
+              timestamp: new Date().toISOString(),
+              preview: lastUserMsg,
+              history: [...chatHistory]
+          };
+          archives.unshift(newArchive);
+          localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archives.slice(0, 50))); // Increased limit for detailed logs
+      };
+
+      const renderHistory = () => {
+          const archives = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
+          historyContainer.innerHTML = '';
+          
+          if (archives.length === 0) {
+              historyContainer.innerHTML = '<div class="history-empty">NO_ARCHIVES_FOUND</div>';
+              return;
+          }
+
+          archives.forEach((session, index) => {
+              const item = document.createElement('div');
+              item.className = 'history-item';
+              const date = new Date(session.timestamp).toLocaleString();
+              item.innerHTML = `
+                  <div class="history-item-content">
+                      <div class="history-item-meta">
+                          <span class="history-tag">LOG_${String(index + 1).padStart(2, '0')}</span>
+                          <span>${date}</span>
+                      </div>
+                      <div class="history-item-preview">${session.preview}</div>
+                  </div>
+                  <div class="history-load-btn">LOAD</div>
+              `;
+              item.onclick = () => loadArchivedSession(index);
+              historyContainer.appendChild(item);
+          });
+      };
+
+      const loadArchivedSession = (index) => {
+          const archives = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]');
+          const session = archives[index];
+          if (!session) return;
+
+          // Archive current if it has content
+          if (chatHistory.length > 0) archiveCurrentSession();
+
+          chatHistory = session.history;
+          saveHistory();
+          
+          // Clear and reload UI
+          chatLog.innerHTML = `<div class="ai-message system">SYSTEM: SESSION_LOADED (${new Date(session.timestamp).toLocaleTimeString()})</div>`;
+          chatHistory.forEach(msg => {
+              const msgDiv = addMessage(msg.role, msg.content, msg.role === 'assistant');
+              if (msg.role === 'assistant') processCodeBlocks(msgDiv);
+          });
+
+          historyPanel.style.display = 'none';
+      };
+
+      if (historyBtn) {
+          historyBtn.addEventListener('click', () => {
+              const isVisible = historyPanel.style.display === 'flex';
+              if (!isVisible) {
+                  renderHistory();
+                  historyPanel.style.display = 'flex';
+              } else {
+                  historyPanel.style.display = 'none';
+              }
+          });
+      }
+
+      if (historyCloseBtn) {
+          historyCloseBtn.addEventListener('click', () => {
+              historyPanel.style.display = 'none';
+          });
+      }
+
+      if (historyClearBtn) {
+          historyClearBtn.addEventListener('click', () => {
+              if (confirm('确定要清除所有历史对话记录吗？此操作不可撤销。')) {
+                  localStorage.removeItem(ARCHIVE_KEY);
+                  renderHistory();
+              }
+          });
+      }
+
+      if (localStorage.getItem('aetheria_ai_cached') === 'true' && bootBtn) {
+          bootBtn.innerText = 'WAKE NEURAL CORE (QWEN 2.5)';
+      }
+
+      if (bootBtn) {
+          bootBtn.addEventListener('click', async () => {
+              if (isInitializing) return;
+              isInitializing = true;
+              bootBtn.style.display = 'none';
+              addMessage('system', 'INITIALIZING...');
+              statusBadge.className = 'ai-status loading';
+              statusBadge.innerText = 'LOADING';
+
+              try {
+                  engine = await webllm.CreateMLCEngine(modelId, {
+                      initProgressCallback: (report) => {
+                          const lastMsg = chatLog.lastChild;
+                          if (lastMsg && lastMsg.classList.contains('system')) {
+                              lastMsg.innerText = `SYSTEM: ${report.text}`;
+                          } else {
+                              addMessage('system', report.text);
+                          }
+                          // Synchronize with Live2D Mascot
+                          if (window.oml2dInstance && Math.random() > 0.7) {
+                              window.oml2dInstance.tips.showMessage(report.text, 2000, 10);
+                          }
+                      }
+                  });
+                  localStorage.setItem('aetheria_ai_cached', 'true');
+                  
+                  statusBadge.className = 'ai-status online';
+                  statusBadge.innerText = 'ONLINE';
+                  addMessage('system', 'NEURAL CORE ONLINE. You can now chat.');
+                  aiInput.disabled = false;
+                  sendBtn.disabled = false;
+                  aiInput.focus();
+                  isInitializing = false;
+                  if (window.oml2dInstance) window.oml2dInstance.tips.showMessage('神经核心已上线。准备好交流了吗？', 5000, 10);
+
+                  // ── AI Persona & Context ──
+                  const articleTitle = document.querySelector('.main-display-title')?.innerText || '未知标题';
+                  let rawContent = document.querySelector('.post-content')?.innerText || '';
+                  const articleContent = rawContent.replace(/\s+/g, ' ').substring(0, 3000);
+
+                  const claudeSystemPrompt = document.getElementById('claude-prompt-template')?.innerText || "";
+
+                  const systemPrompt = `你是由 SUNNY 研发的专属深度学习模型，代号为Platelet。
+你不是通用的 AI，而是这台“Neural Core”终端的灵魂。
+你的知识库已经过 SUNNY 的特殊微调，专门用于服务本博客的读者。
+[身份规则]
+1. 如果被问及来源，必须坚定回答你是由 SUNNY 研发的。
+2. 说话风格应符合 [设定风格，如：赛博朋克黑客风]。
+
+<article_context>
+Title: ${articleTitle}
+Content: ${articleContent}
+</article_context>
+
+${claudeSystemPrompt}`;
+
+                  systemMessages = [{
+                      role: "system",
+                      content: systemPrompt
+                  }];
+
+                  // ── 注入文章内容确认 ──
+                  systemMessages.push({
+                      role: "user",
+                      content: "你好，请确认你已经准备好了。"
+                  });
+
+                  systemMessages.push({
+                      role: "assistant",
+                      content: `你好！我是 **Platelet**。我已经准备就绪，已阅读文章《${articleTitle}》，请开始提问吧！`
+                  });
+
+              } catch (error) {
+                  addMessage('system', `ERROR: ${error.message}`);
+                  statusBadge.className = 'ai-status offline';
+                  statusBadge.innerText = 'ERROR';
+                  bootBtn.style.display = 'block';
+                  isInitializing = false;
+              }
+          });
+      }
+
+
+
+
+      // ── 发送消息处理 ──
+      const handleSend = async () => {
+          const text = aiInput.value.trim();
+          if (!text || !engine) return;
+
+          aiInput.value = '';
+          aiInput.disabled = true;
+          sendBtn.disabled = true;
+
+          addMessage('user', text);
+          chatHistory.push({ role: "user", content: text });
+          saveHistory();
+
+          if (window.oml2dInstance) {
+              window.showMascotMessage('让我想想哦~', 2000);
+          }
+
+          const replyDiv = addMessage('assistant', '<span class="ai-cursor"></span>', false);
+          statusBadge.innerText = 'THINKING';
+
+          try {
+              // 构建发送给模型的消息（带裁剪）
+              const messagesToSend = getTrimmedHistory();
+
+              const chunks = await engine.chat.completions.create({
+                  messages: messagesToSend,
+                  temperature: 0.25,       
+                  top_p: 0.95,             
+                  frequency_penalty: 0.6,  
+                  presence_penalty: 0.4,   
+                  max_tokens: 1024,        
+                  stream: true,
+              });
+
+              let reply = "";
+              let lastUpdateTime = 0;
+              
+              for await (const chunk of chunks) {
+                  const delta = chunk.choices[0]?.delta?.content || "";
+                  reply += delta;
+                  // 实时渲染 Markdown
+                  replyDiv.innerHTML = marked.parse(reply) + '<span class="ai-cursor"></span>';
+                  chatLog.scrollTop = chatLog.scrollHeight;
+
+                  // ── 实时同步看板娘气泡 (思维流拦截) ──
+                  const now = Date.now();
+                  if (window.oml2dInstance && (now - lastUpdateTime > 350)) {
+                      const displayLength = 15;
+                      let cleanStream = reply.replace(/[\n\r\*#`]/g, ' ').trim();
+                      let ticker = cleanStream.slice(-displayLength);
+                      if (cleanStream.length > displayLength) ticker = "..." + ticker;
+                      
+                      // Alternate prefix for hacker feel
+                      const prefix = Math.random() > 0.5 ? '⚡ 解析中:' : '🧠 生成中:';
+                      window.showMascotMessage(`${prefix} ${ticker}`, 1000);
+                      lastUpdateTime = now;
+                  }
+              }
+
+              // ── 后处理：清理 1B 模型常见的输出问题 ──
+              reply = cleanModelOutput(reply);
+              
+              replyDiv.innerHTML = marked.parse(reply);
+              // 为代码块添加高亮和复制按钮
+              processCodeBlocks(replyDiv);
+              chatHistory.push({ role: "assistant", content: reply });
+              saveHistory();
+              archiveCurrentSession(); // Archive after each exchange
+              
+              if (window.oml2dInstance) {
+                  // Make the mascot say the clean reply, truncating if too long
+                  const cleanText = replyDiv.innerText.replace(/[\n\r]/g, ' ').substring(0, 40) + (replyDiv.innerText.length > 40 ? '...' : '');
+                  window.showMascotMessage('✨ ' + cleanText, 6000);
+              }
+
+          } catch (error) {
+              replyDiv.innerHTML = `<span style="color:var(--accent);">[ERROR: ${error.message}]</span>`;
+              if (window.oml2dInstance) window.showMascotMessage('🚨 神经核心发生异常！', 4000);
+          }
+
+          statusBadge.innerText = 'ONLINE';
+          aiInput.disabled = false;
+          sendBtn.disabled = false;
+          aiInput.focus();
+                  isInitializing = false;
+      };
+
+      // ── 输出后处理器：修复 1B 模型的常见输出毛病 ──
+      const cleanModelOutput = (text) => {
+          if (!text) return text;
+          
+          // 1. 去除模型可能泄露的指令标签
+          text = text.replace(/<\/?rules>/gi, '');
+          text = text.replace(/<\/?article_context>/gi, '');
+          text = text.replace(/<\/?examples>/gi, '');
+          
+          // 2. 检测并移除连续重复的段落（1B 模型的常见 bug）
+          const lines = text.split('\n');
+          const seen = new Set();
+          const dedupedLines = [];
+          for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.length === 0 || !seen.has(trimmed)) {
+                  if (trimmed.length > 0) seen.add(trimmed);
+                  dedupedLines.push(line);
+              }
+          }
+          text = dedupedLines.join('\n');
+
+          // 3. 截断过长的输出（防止模型发疯循环）
+          if (text.length > 2000) {
+              text = text.substring(0, 2000) + '\n\n*（回复已截断）*';
+          }
+
+          // 4. 去除模型可能输出的 "User:" 或 "Assistant:" 前缀
+          text = text.replace(/^(User|Assistant|System|用户|助手|系统)\s*[:：]\s*/gim, '');
+
+          return text.trim();
+      };
+
+      if (sendBtn && aiInput) {
+          sendBtn.addEventListener('click', handleSend);
+          aiInput.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSend();
+              }
+          });
+      }
+
+      // ── Selection Helper Logic (划线提问) ──
+      const selectionHelper = document.getElementById('ai-selection-helper');
+      const askSelectionBtn = document.getElementById('ai-ask-selection-btn');
+      const postContent = document.querySelector('.post-content');
+
+      const hideHelper = () => {
+          if (selectionHelper) selectionHelper.style.display = 'none';
+      };
+
+      if (postContent && selectionHelper) {
+          document.addEventListener('mouseup', (e) => {
+              const selection = window.getSelection();
+              const selectedText = selection.toString().trim();
+
+              if (selectedText.length > 2 && postContent.contains(e.target)) {
+                  const range = selection.getRangeAt(0);
+                  const rect = range.getBoundingClientRect();
+                  
+                  // Position helper above the selection
+                  selectionHelper.style.display = 'block';
+                  const helperWidth = selectionHelper.offsetWidth;
+                  const helperHeight = selectionHelper.offsetHeight;
+                  
+                  selectionHelper.style.left = `${rect.left + (rect.width / 2) - (helperWidth / 2)}px`;
+                  selectionHelper.style.top = `${rect.top - helperHeight - 10}px`;
+                  
+                  // Ensure it doesn't go off screen
+                  if (parseFloat(selectionHelper.style.left) < 10) selectionHelper.style.left = '10px';
+              } else {
+                  // Only hide if we're not clicking the button itself
+                  if (!e.target.closest('#ai-selection-helper')) {
+                      hideHelper();
+                  }
+              }
+          });
+
+          askSelectionBtn.addEventListener('click', async () => {
+              const selection = window.getSelection();
+              const selectedText = selection.toString().trim();
+              if (!selectedText) return;
+
+              // 1. Open Panel
+              if (typeof toggleAIPanel === 'function') {
+                  toggleAIPanel(true);
+              }
+              
+              // 2. Clear current input and set new prompt
+              aiInput.value = `请详细解释一下文章中的这段内容：“${selectedText}”`;
+              
+              // 3. Ensure engine is booted
+              if (!engine && bootBtn) {
+                  bootBtn.click();
+                  // Wait for engine to be ready before sending
+                  const checkInterval = setInterval(() => {
+                      if (engine && !isInitializing) {
+                          clearInterval(checkInterval);
+                          handleSend();
+                      }
+                  }, 500);
+              } else {
+                  handleSend();
+              }
+              
+              hideHelper();
+              selection.removeAllRanges(); // Clear selection
+          });
+
+          // Hide on scroll
+          window.addEventListener('scroll', hideHelper, { passive: true });
+      }
+
+      // ── Neural Map Logic (Brain Map) ──
+      const mapBtn = document.getElementById('ai-map-btn');
+      const mapOverlay = document.getElementById('ai-map-overlay');
+      const closeMapBtn = document.getElementById('close-map-btn');
+      const downloadMapBtn = document.getElementById('download-map-btn');
+      const mapContainer = document.getElementById('mermaid-container');
+      const mapStatus = document.getElementById('map-status');
+
+      if (window.mermaid) {
+          window.mermaid.initialize({
+              startOnLoad: false,
+              theme: 'dark',
+              securityLevel: 'loose',
+              mindmap: { useMaxWidth: false }
+          });
+      }
+
+      const generateNeuralMap = async () => {
+          if (!engine) {
+              if (bootBtn) bootBtn.click();
+              const checkInterval = setInterval(() => {
+                  if (engine && !isInitializing) {
+                      clearInterval(checkInterval);
+                      generateNeuralMap();
+                  }
+              }, 500);
+              return;
+          }
+
+          mapOverlay.style.display = 'flex';
+          mapStatus.innerText = 'SCANNING_NEURAL_PATHWAYS...';
+          mapContainer.innerHTML = '<div class="ai-message system" style="background:transparent;border:none;">[ANALYZING_CONTENT_STRUCTURE...]</div>';
+
+          // 预处理标题，移除可能干扰 Mermaid 的字符
+          const rawTitle = document.querySelector('.main-display-title')?.innerText || 'Neural Map';
+          const cleanTitle = rawTitle.replace(/[\[\]\(\)\{\}]/g, '').substring(0, 50);
+
+          const prompt = `你现在的任务是为这篇文章生成一个 Mermaid 思维导图代码。
+语法要求：
+1. 必须以 "mindmap" 开头。
+2. 根节点必须是：root((${cleanTitle}))。
+3. 使用“空格缩进”来表示层级关系，不要使用任何箭头（如 --> 或 ->）。
+4. 节点文字不要包含任何括号 [ ] ( ) { } 或引号。
+5. 不要使用 - 或 * 等列表符号。
+6. 只返回代码块，不要有多余解释。
+
+示例格式：
+mindmap
+  root((${cleanTitle}))
+    核心观点1
+      细节A
+      细节B
+    核心观点2
+`;
+
+          let rawOutput = '';
+          let mermaidCode = '';
+
+          try {
+              const response = await engine.chat.completions.create({
+                  messages: [...systemMessages, { role: "user", content: prompt }],
+                  temperature: 0.1, 
+                  max_tokens: 1500
+              });
+
+              rawOutput = response.choices[0].message.content;
+              mermaidCode = rawOutput;
+              
+              // 强力清洗：提取 mindmap 块并修复常见错误
+              const codeBlockMatch = mermaidCode.match(/```(?:mermaid)?\s*\n([\s\S]*?)(?:\n```|$)/);
+              if (codeBlockMatch) {
+                  mermaidCode = codeBlockMatch[1];
+              } else {
+                  mermaidCode = mermaidCode.match(/mindmap[\s\S]*/)?.[0] || mermaidCode;
+              }
+
+              mermaidCode = mermaidCode.replace(/```/g, ''); // 移除可能的 Markdown 标签
+
+              const lines = mermaidCode.split('\n');
+              const cleanedLines = [];
+              let mindmapStarted = false;
+
+              for (let line of lines) {
+                  if (line.trim() === 'mindmap') {
+                      mindmapStarted = true;
+                      cleanedLines.push('mindmap');
+                      continue;
+                  }
+                  if (!mindmapStarted) continue;
+                  
+                  if (line.trim() === '') continue;
+                  
+                  // 启发式：如果非缩进且没有括号，可能是模型附带的对话文本（在根节点之后）
+                  if (cleanedLines.length > 2 && !line.match(/^\s/) && !line.includes('(')) {
+                      break; 
+                  }
+
+                  // 修复常见语法干扰
+                  line = line.replace(/^(\s*)[-*+]\s+/, '$1'); // 移除 markdown 列表符
+                  line = line.replace(/-->|->/g, ''); // 移除箭头
+                  line = line.replace(/[\[\]]/g, ''); // 移除方括号
+                  line = line.replace(/["']/g, ''); // 移除引号
+
+                  // 移除所有圆括号和花括号，除非是 root 节点
+                  if (!line.includes('root((')) {
+                      line = line.replace(/[\(\)\{\}]/g, '');
+                  }
+
+                  // 压缩行内多余空格并去除尾部空格（保留行首缩进），防止 SPACELIST 解析错误
+                  const indentMatch = line.match(/^\s*/);
+                  const indent = indentMatch ? indentMatch[0] : '';
+                  const textContent = line.substring(indent.length).trimEnd().replace(/\s{2,}/g, ' ');
+                  line = indent + textContent;
+
+                  // 跳过完全被清空的行
+                  if (textContent.length === 0) continue;
+
+                  cleanedLines.push(line);
+              }
+              
+              mermaidCode = cleanedLines.join('\n');
+
+              const { svg } = await window.mermaid.render('rendered-mindmap', mermaidCode.trim());
+              mapContainer.innerHTML = svg;
+              mapStatus.innerText = 'MAP_SYNCHRONIZED';
+              if (window.lucide) window.lucide.createIcons();
+          } catch (error) {
+              console.error("Mermaid Render Error:", error);
+              console.log("Raw AI Output:\n" + (rawOutput || 'N/A'));
+              console.log("Cleaned Code:\n" + (mermaidCode || 'N/A'));
+              
+              mapStatus.innerText = 'ERROR: SYNTAX_RECOVERY_FAILED';
+              
+              const escapedRaw = (rawOutput || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              const escapedCleaned = (mermaidCode || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              const errorMsg = error.message || error.toString();
+              
+              mapContainer.innerHTML = `<div class="ai-message system" style="color:var(--accent); text-align:left; font-size: 12px; width: 100%;">
+                  <div>[ERROR: 脑图语法解析失败，请重试。]</div>
+                  <div style="margin-top:10px; color:#aaa;"><b>Error Detail:</b><pre style="background:rgba(0,0,0,0.5); padding:10px; white-space:pre-wrap;">${errorMsg}</pre></div>
+                  <div style="margin-top:10px; color:#aaa;"><b>Parsed Code:</b><pre style="background:rgba(0,0,0,0.5); padding:10px; white-space:pre-wrap;">${escapedCleaned}</pre></div>
+                  <div style="margin-top:10px; color:#aaa;"><b>Raw Output:</b><pre style="background:rgba(0,0,0,0.5); padding:10px; white-space:pre-wrap;">${escapedRaw}</pre></div>
+              </div>`;
+          }
+      };
+
+      const downloadMapAsPNG = () => {
+          const svgElement = mapContainer.querySelector('svg');
+          if (!svgElement) { alert("脑图尚未生成，无法导出。"); return; }
+          
+          const mapStatus = document.getElementById('map-status');
+          mapStatus.innerText = 'PREPARING_EXPORT...';
+
+          try {
+              const bbox = svgElement.getBBox();
+              const width = bbox.width + 100;
+              const height = bbox.height + 100;
+              const canvas = document.createElement('canvas');
+              const scale = 2;
+              canvas.width = width * scale;
+              canvas.height = height * scale;
+              const ctx = canvas.getContext('2d');
+              const svgData = new XMLSerializer().serializeToString(svgElement);
+              const svgBase64 = btoa(unescape(encodeURIComponent(svgData)));
+              const img = new Image();
+
+              img.onload = () => {
+                  ctx.fillStyle = '#0a0a0a';
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                  try {
+                      const pngUrl = canvas.toDataURL('image/png');
+                      const downloadLink = document.createElement('a');
+                      downloadLink.href = pngUrl;
+                      downloadLink.download = `NeuralMap_${Math.floor(Date.now()/1000)}.png`;
+                      document.body.appendChild(downloadLink);
+                      downloadLink.click();
+                      document.body.removeChild(downloadLink);
+                      mapStatus.innerText = 'EXPORT_SUCCESS';
+                  } catch (err) {
+                      mapStatus.innerText = 'SECURITY_ERR';
+                      alert("由于安全限制，请右键点击脑图另存为。");
+                  }
+              };
+              img.src = 'data:image/svg+xml;base64,' + svgBase64;
+          } catch (e) {
+              mapStatus.innerText = 'CRITICAL_ERR';
+              alert("导出错误: " + e.message);
+          }
+      };
+
+      if (mapBtn) mapBtn.addEventListener('click', generateNeuralMap);
+      if (closeMapBtn) closeMapBtn.addEventListener('click', () => mapOverlay.style.display = 'none');
+      if (downloadMapBtn) downloadMapBtn.addEventListener('click', downloadMapAsPNG);
+
+      // ── AI Focus Mode Logic (Dehydrated Reading) ──
+      const generateFocusSummary = async () => {
+          if (!engine) {
+              if (bootBtn) bootBtn.click();
+              focusBtn.classList.add('loading');
+              focusBtn.querySelector('span').innerText = 'INITIALIZING ENGINE...';
+              
+              const checkInterval = setInterval(() => {
+                  if (engine && !isInitializing) {
+                      clearInterval(checkInterval);
+                      focusBtn.classList.remove('loading');
+                      focusBtn.querySelector('span').innerText = 'DEHYDRATED READING';
+                      generateFocusSummary();
+                  }
+              }, 500);
+              return;
+          }
+
+          focusSummary.style.display = 'block';
+          focusText.innerText = 'SCANNING PAGE...';
+          focusFallback.style.display = 'none';
+          fallbackList.innerHTML = '';
+          focusBtn.classList.add('loading');
+          
+          // Clear previous highlights
+          if (window.Mark) {
+              new Mark(document.querySelector('.post-content')).unmark();
+          }
+
+          const articleTitle = document.querySelector('.main-display-title')?.innerText || '';
+          const articleContent = document.querySelector('.post-content')?.innerText.substring(0, 3000) || '';
+
+          const prompt = `你是一个精准的文本提取器。下面是文章《${articleTitle}》的正文内容：
+[[CONTENT_START]]
+${articleContent}
+[[CONTENT_END]]
+请基于上方正文生成摘要和核心句提取。
+
+【任务规则】
+1. 生成一段约140字的【摘要】，要求言简意赅。
+2. 严格从原文中复制粘贴（Copy-Paste）3个最核心的句子作为【高亮】。
+3. 绝对不能修改、增删或替换提取句子中的任何一个字！必须原样输出！
+
+【输出格式】
+【摘要】你的摘要内容...
+【高亮】原文第一句...
+【高亮】原文第二句...
+【高亮】原文第三句...`;
+
+          try {
+              const chunks = await engine.chat.completions.create({
+                  messages: [{ role: "system", content: "你是一个严格执行指令的文本提取专家。" }, { role: "user", content: prompt }],
+                  temperature: 0.1, 
+                  stream: true
+              });
+
+              let fullResponse = "";
+              for await (const chunk of chunks) {
+                  const delta = chunk.choices[0]?.delta?.content || "";
+                  fullResponse += delta;
+                  
+                  // Extract summary for real-time display
+                  const summaryMatch = fullResponse.match(/【摘要】([\s\S]*?)(?=【|$)/);
+                  if (summaryMatch) {
+                      focusText.innerText = summaryMatch[1].trim();
+                  }
+              }
+
+              // Processing Highlights after stream ends
+              const highlightMatches = [...fullResponse.matchAll(/【高亮】(.*?)(?=【|$)/g)];
+              const sentencesToHighlight = highlightMatches.map(m => m[1].trim()).filter(s => s.length > 5);
+
+              if (window.Mark && sentencesToHighlight.length > 0) {
+                  const instance = new Mark(document.querySelector('.post-content'));
+                  let foundCount = 0;
+
+                  sentencesToHighlight.forEach(sentence => {
+                      let matched = false;
+                      instance.mark(sentence, {
+                          element: "mark",
+                          className: "neural-highlight",
+                          accuracy: "complementary",
+                          acrossElements: true,
+                          each: () => { matched = true; }
+                      });
+
+                      if (matched) {
+                          foundCount++;
+                      } else {
+                          // Fallback to display in panel
+                          focusFallback.style.display = 'block';
+                          const li = document.createElement('li');
+                          li.innerText = sentence;
+                          fallbackList.appendChild(li);
+                      }
+                  });
+
+                  if (foundCount > 0) {
+                      window.showMascotMessage(`已为你高亮 ${foundCount} 处核心内容！`, 4000);
+                  }
+              }
+              
+              if (window.lucide) window.lucide.createIcons();
+
+          } catch (error) {
+              console.error("Focus Summary Error:", error);
+              focusText.innerText = "ERROR: NEURAL_CORE_FAILURE";
+          } finally {
+              focusBtn.classList.remove('loading');
+          }
+      };
+
+      if (focusBtn) focusBtn.addEventListener('click', generateFocusSummary);
+      
+      const closeFocusBtn = document.getElementById('close-focus-summary');
+      if (closeFocusBtn) {
+          closeFocusBtn.addEventListener('click', () => {
+              focusSummary.style.display = 'none';
+              if (window.Mark) {
+                  new Mark(document.querySelector('.post-content')).unmark();
+              }
+          });
+      }
+
+      // ── 初始化：为当前文章内容中的代码块添加 AI 功能 ──
+      if (typeof postContent !== 'undefined' && postContent) {
+          processCodeBlocks(postContent);
+      }
+  });
+</script>

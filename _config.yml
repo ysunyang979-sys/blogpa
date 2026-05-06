@@ -1,0 +1,57 @@
+  # Hexo Configuration
+  title: ProxySense
+  subtitle: 全平台代理软件终极图鉴
+  description: 2026年最新全平台代理软件解析，涵盖 Windows, Android, iOS 平台最强工具。
+  author: Sunny
+  language: zh-CN
+  timezone: Asia/Shanghai
+
+  # URL
+  url: http://localhost:4000
+  root: /
+
+  # Directory
+  source_dir: source
+  public_dir: public
+  tag_dir: tags
+  archive_dir: archives
+  category_dir: categories
+  code_dir: codes
+  i18n_dir: :lang
+  skip_render: []
+
+  # Writing
+  new_post_name: :title.md
+  default_layout: post
+  title_case: false
+  external_link:
+    enable: true
+    field: site
+    exclude: ""
+  filename_case: 0
+  render_drafts: false
+  post_asset_folder: false
+  relative_link: false
+  future: true
+  syntax_highlighter: highlight.js
+  highlight:
+    enable: true
+    line_number: true
+    auto_detect: false
+    tab_replace: ""
+    wrap: true
+    hljs: false
+
+  # Theme
+  theme: aetheria
+
+  # Search
+  search:
+    path: search.json
+    field: post
+    content: true
+    format: html
+
+  # Deployment
+  deploy:
+    type: ""

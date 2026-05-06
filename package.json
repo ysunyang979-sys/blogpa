@@ -1,0 +1,32 @@
+{
+  "name": "blp",
+  "private": true,
+  "version": "0.0.0",
+  "hexo": {
+    "version": "7.3.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "server": "hexo server",
+    "clean": "hexo clean",
+    "generate": "hexo generate"
+  },
+  "dependencies": {
+    "hexo": "^7.3.0",
+    "hexo-generator-archive": "^2.0.0",
+    "hexo-generator-category": "^2.0.0",
+    "hexo-generator-index": "^3.0.0",
+    "hexo-generator-searchdb": "^1.5.0",
+    "hexo-generator-tag": "^2.0.0",
+    "hexo-renderer-ejs": "^2.0.0",
+    "hexo-renderer-marked": "^6.3.0",
+    "hexo-renderer-stylus": "^3.0.0",
+    "hexo-server": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.0.9"
+  }
+}

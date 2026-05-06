@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%- page.title || config.title %> | <%- config.subtitle %></title>
+    <meta name="description" content="<%- page.description || config.description %>">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="<%- url_for('images/network-icon.svg') %>">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- CSS with Cache Busting -->
+    <link rel="stylesheet" href="<%- url_for('css/style.css') %>?v=<%- Date.now() %>">
+
+    <style>
+      .view { display: block; animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+      
+      /* Hexo Specific Overrides */
+      .hero-background-dark { background-image: url('<%- url_for("images/hero.png") %>'); }
+      .hero-background-light { background-image: url('<%- url_for("images/hero-light.png") %>'); }
+    </style>
+
+    <!-- Theme Persistence & Config -->
+    <script>
+      (function() {
+        var theme = localStorage.getItem('aetheria_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        window.AETHERIA_CONFIG = {
+          root: '<%- config.root || "/" %>',
+          searchPath: '<%- config.search ? (config.search.path || "search.json") : "search.json" %>'
+        };
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Top Reading Progress Bar -->
+    <div id="scroll-progress"></div>
+
+    <!-- Command Palette -->
+    <div id="command-palette" style="display: none;">
+      <div class="palette-backdrop"></div>
+      <div class="palette-box">
+        <div class="palette-header">
+          <i data-lucide="terminal"></i>
+          <span>NEURAL TERMINAL</span>
+        </div>
+        <input type="text" id="palette-input" placeholder="Enter command... (help for info)" autocomplete="off" spellcheck="false">
+        <div id="palette-results"></div>
+      </div>
+    </div>
+
+    <!-- Background Decorations -->
+    <div class="noise-overlay"></div>
+    <div id="grid-highlight"></div>
+    <div class="floating-shapes">
+      <div class="shape s1"></div>
+      <div class="shape s2"></div>
+      <div class="shape s3"></div>
+    </div>
+    
+    <!-- Draggable Stickers -->
+    <div class="sticker draggable" style="top: 15%; left: 10%;">NEURAL</div>
+    <div class="sticker draggable" style="bottom: 15%; right: 5%; animation-delay: -5s; font-size: 12rem;">CORE</div>
+    <div class="sticker draggable" style="top: 45%; left: 5%; animation-delay: -10s; font-size: 5rem; opacity: 0.05;">AETHERIA</div>
+
+    <!-- Custom Cursor -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-outline"></div>
+
+    <!-- Reading Progress -->
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+
+    <nav id="navbar">
+      <div class="nav-container">
+        <a href="<%- url_for('/') %>" class="logo" style="text-decoration: none;">Platelet</a>
+        
+        <button id="mobile-menu-toggle" class="btn btn-outline mobile-only" style="padding: 0.6rem; border-radius: 12px; margin-left: auto; margin-right: 1rem;">
+          <i data-lucide="menu"></i>
+        </button>
+
+        <ul class="nav-links">
+          <li><a href="<%- url_for('/') %>">首页</a></li>
+          <li><a href="<%- url_for('/archives') %>">博文</a></li>
+          <li><a href="<%- url_for('/tags') %>">标签</a></li>
+        </ul>
+        <div class="nav-actions">
+          <button id="nav-voice" class="btn btn-outline" style="padding: 0.6rem; border-radius: 12px;" title="AI Voice Reader">
+            <i data-lucide="radio"></i>
+          </button>
+          <button id="nav-zen" class="btn btn-outline" style="padding: 0.6rem; border-radius: 12px;" title="Zen/Focus Mode">
+            <i data-lucide="crosshair"></i>
+          </button>
+          <button id="nav-highlight" class="btn btn-outline" style="padding: 0.6rem; border-radius: 12px;" title="Neural Ink & Layer (NIL)">
+            <i data-lucide="pen-tool"></i>
+          </button>
+          <button id="nav-search" class="btn btn-outline" style="padding: 0.6rem; border-radius: 12px;" title="Search">
+            <i data-lucide="search"></i>
+          </button>
+          <button id="nav-favorites" class="btn btn-outline" style="padding: 0.6rem; border-radius: 12px;" title="My Favorites">
+            <i data-lucide="bookmark"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main id="app">
+      <%- body %>
+    </main>
+
+    <footer style="padding: var(--spacing-lg) 0; border-top: 1px solid var(--glass-border); text-align: center; margin-top: var(--spacing-xl);">
+      <div class="container">
+        <div id="ascii-art-container" style="margin-bottom: 2rem; min-height: 150px; font-family: monospace; font-size: 0.6rem; line-height: 1; color: var(--primary);">
+            <!-- ASCII Art will be rendered here -->
+        </div>
+        <p style="color: var(--text-dim); font-size: 0.9rem;">&copy; <%- date(new Date(), 'YYYY') %> <%- config.author %>. </p>
+      </div>
+    </footer>
+
+    <!-- Terminal Help Modal -->
+    <div id="terminal-help-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 99999; backdrop-filter: blur(5px);"></div>
+    <div id="terminal-help-modal" class="glass" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100000; width: 90%; max-width: 600px; padding: 2.5rem; max-height: 80vh; overflow-y: auto;">
+      <h2 style="margin-bottom: 1.5rem; border-bottom: 4px solid var(--text-main); padding-bottom: 0.5rem; font-weight: 900; text-transform: uppercase;"><i data-lucide="terminal"></i> 终端指令手册</h2>
+      <div style="font-size: 1.05rem; line-height: 1.6;">
+        <p style="margin-bottom: 1rem;">按下 <strong>Ctrl + K</strong> 唤出终端，输入以下隐藏指令解锁全站特效：</p>
+        
+        <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; background: var(--primary); color: var(--black); display: inline-block; padding: 0.2rem 0.5rem;">🎨 持久化主题</h3>
+        <ul style="list-style: none; padding-left: 0.5rem; margin-bottom: 1.5rem;">
+          <li><code style="font-weight: bold;">neon</code>：赛博朋克霓虹夜之城</li>
+          <li><code style="font-weight: bold;">hacker</code>：极客纯粹终端风格</li>
+          <li><code style="font-weight: bold;">print</code>：80年代复古点阵打印</li>
+          <li><code style="font-weight: bold;">sepia</code>：复古羊皮纸质感</li>
+          <li><code style="font-weight: bold;">wireframe</code>：开发者透视线框</li>
+          <li><code style="font-weight: bold;">dark</code> / <code style="font-weight: bold;">light</code>：基础明暗主题</li>
+          <li><code style="font-weight: bold;">reset</code>：清除记忆，恢复默认</li>
+        </ul>
+        
+        <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; background: var(--secondary); color: var(--black); display: inline-block; padding: 0.2rem 0.5rem;">💥 一次性动效</h3>
+        <ul style="list-style: none; padding-left: 0.5rem;">
+          <li><code style="font-weight: bold;">matrix</code>：开启黑客帝国数字雨 (输入 <code style="color: var(--accent);">exit</code> 关闭)</li>
+          <li><code style="font-weight: bold;">hack</code>：全站文字乱码解密模拟</li>
+          <li><code style="font-weight: bold;">gravity0</code>：关闭重力，物理漂浮</li>
+          <li><code style="font-weight: bold;">explode</code>：物理炸毁网站并刷新</li>
+          <li><code style="font-weight: bold;">burn</code> / <code style="font-weight: bold;">emp</code> / <code style="font-weight: bold;">glitch</code>：彩蛋</li>
+        </ul>
+      </div>
+      <button id="close-terminal-help" class="btn btn-primary" style="margin-top: 2rem; width: 100%; border-radius: 0;">关闭 (CLOSE)</button>
+    </div>
+
+    <!-- Mermaid -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+    </script>
+    
+    <!-- MathJax -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script src="<%- url_for('js/main.js') %>?v=<%- Date.now() %>"></script>
+
+  </body>
+</html>

@@ -1,0 +1,348 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&family=Inter:wght@400;600;800;900&display=swap');
+
+:root {
+    --bg: #f4f4f0;
+    --white: #ffffff;
+    --black: #000000;
+    --primary: #f9db4a; /* Vibrant Yellow */
+    --secondary: #ff90e8; /* Vibrant Pink */
+    --accent: #00e1ff; /* Vibrant Cyan */
+    --border-width: 3px;
+    --shadow-offset: 6px;
+    --transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--black);
+    line-height: 1.5;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+h1, h2, h3, .brand {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 12px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg);
+    border-left: var(--border-width) solid var(--black);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--black);
+}
+
+/* Hide blobs - Neo-Brutalism is about structure, not blurs */
+.bg-blobs {
+    display: none;
+}
+
+/* Navbar */
+nav {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 1200px;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--white);
+    border: var(--border-width) solid var(--black);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--black);
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--black);
+    text-decoration: none;
+    letter-spacing: -2px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.nav-links a {
+    color: var(--black);
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border: 2px solid transparent;
+    transition: var(--transition);
+}
+
+.nav-links a:hover {
+    background: var(--primary);
+    border: 2px solid var(--black);
+    transform: translate(-2px, -2px);
+    box-shadow: 3px 3px 0px 0px var(--black);
+}
+
+/* Hero Section */
+.hero {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 8rem 2rem 4rem;
+    position: relative;
+    background: var(--white);
+    border-bottom: var(--border-width) solid var(--black);
+    margin-bottom: 4rem;
+}
+
+.hero-content {
+    z-index: 10;
+    max-width: 1000px;
+}
+
+.hero h1 {
+    font-size: clamp(3rem, 10vw, 6rem);
+    line-height: 0.9;
+    margin-bottom: 2rem;
+    -webkit-text-stroke: 1px var(--black);
+    paint-order: stroke fill;
+}
+
+.hero p {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    background: var(--white);
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    border: var(--border-width) solid var(--black);
+    box-shadow: 4px 4px 0px 0px var(--black);
+    transform: rotate(-1deg);
+}
+
+
+/* Main Content */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+}
+
+.section-title {
+    font-size: 3rem;
+    margin-bottom: 4rem;
+    padding: 0.5rem 2rem;
+    background: var(--secondary);
+    display: inline-block;
+    border: var(--border-width) solid var(--black);
+    box-shadow: 8px 8px 0px 0px var(--black);
+    transform: rotate(1deg);
+}
+
+/* Software Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 3rem;
+    margin-bottom: 6rem;
+}
+
+.card {
+    background: var(--white);
+    border: var(--border-width) solid var(--black);
+    padding: 2.5rem;
+    transition: var(--transition);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--black);
+}
+
+.card:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 12px 12px 0px 0px var(--black);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 0; /* Square icons for brutalist look */
+    border: var(--border-width) solid var(--black);
+    background: var(--primary);
+    padding: 5px;
+    object-fit: contain;
+}
+
+.card-title h3 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: var(--accent);
+    color: var(--black);
+    border: 2px solid var(--black);
+    font-size: 0.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    transform: rotate(-2deg);
+}
+
+.card-desc {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    flex-grow: 1;
+}
+
+.card-features {
+    list-style: none;
+    margin-bottom: 2.5rem;
+}
+
+.card-features li {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.card-features li::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: var(--black);
+    flex-shrink: 0;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    font-weight: 900;
+    text-decoration: none;
+    text-transform: uppercase;
+    border: var(--border-width) solid var(--black);
+    transition: var(--transition);
+    cursor: pointer;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--black);
+    box-shadow: 4px 4px 0px 0px var(--black);
+}
+
+.btn-primary:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px var(--black);
+}
+
+.btn-primary:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px 0px var(--black);
+}
+
+/* Comparison Tables */
+.table-wrapper {
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border: var(--border-width) solid var(--black);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+}
+
+th, td {
+    padding: 1.2rem;
+    text-align: left;
+    border: var(--border-width) solid var(--black);
+    font-weight: 700;
+}
+
+th {
+    background: var(--black);
+    color: var(--white);
+    text-transform: uppercase;
+}
+
+.pros { color: #000; background: #90ff90; }
+.cons { color: #000; background: #ff9090; }
+
+/* Final Verdict Section Specifics */
+.final-verdict .card {
+    background: var(--accent);
+    transform: rotate(-1deg);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    nav { 
+        top: 10px;
+        width: calc(100% - 20px);
+        padding: 0.8rem 1rem;
+    }
+    .logo { font-size: 1.4rem; }
+    .nav-links { display: none; }
+    .container { padding: 0 1rem 4rem; }
+    .hero { padding: 8rem 1rem 3rem; }
+    .hero h1 { font-size: 3.5rem; }
+    .hero p { font-size: 1.1rem; }
+    .section-title { font-size: 2rem; }
+    .grid { grid-template-columns: 1fr; gap: 2rem; }
+}
+
+/* Scroll Animations - Adjusted for Neo-Brutalism */
+.reveal {
+    opacity: 0;
+    transform: translateY(50px) rotate(2deg);
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+}
+
