@@ -207,7 +207,10 @@
                     <button id="ai-reset-btn" class="ai-console-btn" title="Reset Session"><i data-lucide="plus"></i></button>
                     <button id="ai-map-btn" class="ai-console-btn" title="Generate Neural Map"><i data-lucide="network"></i></button>
                     <button id="ai-history-btn" class="ai-console-btn" title="View History"><i data-lucide="archive"></i></button>
+                    <button id="ai-code-mode-btn" class="ai-console-btn" title="Code Mode (Karpathy Guidelines)"><i data-lucide="code-xml"></i></button>
                     <button id="ai-zen-btn" class="ai-console-btn" title="Toggle Immersive Mode"><i data-lucide="maximize-2"></i></button>
+
+                    <button id="ai-focus-mode-btn" class="ai-console-btn" title="Focus Mode (ChatGPT Style)"><i data-lucide="layout"></i></button>
                 </div>
             </div>
             <div class="ai-header-right">
@@ -256,8 +259,8 @@
               <span id="map-status" class="map-status">IDLE</span>
           </div>
           <div class="map-actions">
-              <button id="download-map-btn" class="map-btn" title="Export as PNG"><i data-lucide="download"></i> EXPORT_PNG</button>
-              <button id="close-map-btn" class="map-btn" title="Close"><i data-lucide="x"></i></button>
+              <button id="download-artifact-btn" class="map-btn" title="Download HTML"><i data-lucide="download"></i> DOWNLOAD</button>
+              <button id="close-artifact-btn" class="map-btn" title="Close"><i data-lucide="x"></i></button>
           </div>
       </div>
       <div id="mermaid-container" class="mermaid-container">
@@ -367,6 +370,183 @@
     height: 750px;
     box-shadow: 15px 15px 0px 0px var(--black);
     transition: all 0.4s var(--cubic-bezier);
+  }
+
+  /* AI Focus Mode - Full Screen Chat (ChatGPT Style) */
+  body.ai-focus-mode {
+      overflow: hidden !important;
+      background: var(--bg-card) !important;
+  }
+  
+  body.ai-focus-mode #navbar,
+  body.ai-focus-mode footer,
+  body.ai-focus-mode .post-hero,
+  body.ai-focus-mode .post-header,
+  body.ai-focus-mode .post-sidebar-left,
+  body.ai-focus-mode .post-content,
+  body.ai-focus-mode #toc-container,
+  body.ai-focus-mode .ai-marquee,
+  body.ai-focus-mode .noise-overlay,
+  body.ai-focus-mode .floating-shapes,
+  body.ai-focus-mode .sticker,
+  body.ai-focus-mode #scroll-progress,
+  body.ai-focus-mode #progress-container {
+      display: none !important;
+  }
+
+  body.ai-focus-mode .post-body-wrapper {
+      display: block !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: none !important;
+      height: 100vh !important;
+      background: var(--bg-card);
+  }
+
+  body.ai-focus-mode .post-sidebar-right {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 100000 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+  }
+
+  body.ai-focus-mode .ai-panel-container {
+      height: 100vh !important;
+      width: 100% !important;
+      border: none !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      background: transparent !important;
+  }
+
+  body.ai-focus-mode .ai-header {
+      padding: 1.5rem 10% !important;
+      background: rgba(0, 0, 0, 0.02);
+      border-bottom: 1px solid var(--glass-border);
+  }
+
+  body.ai-focus-mode .ai-chat-log {
+      max-width: 900px !important;
+      margin: 0 auto !important;
+      width: 100% !important;
+      flex: 1 !important;
+      padding: 3rem 2rem !important;
+      background: transparent !important;
+  }
+
+  body.ai-focus-mode .ai-input-wrapper {
+      max-width: 850px !important;
+      margin: 0 auto 3rem !important;
+      width: calc(100% - 4rem) !important;
+      background: var(--white) !important;
+      border: 3px solid var(--black) !important;
+      box-shadow: 10px 10px 0px 0px var(--black) !important;
+      padding: 0.5rem 1rem !important;
+  }
+
+  body.ai-focus-mode #ai-input {
+      font-size: 1.1rem !important;
+  }
+
+  #ai-focus-mode-btn.active {
+      background: var(--accent) !important;
+      color: var(--black) !important;
+      box-shadow: 2px 2px 0px 0px var(--black) inset !important;
+  }
+
+  /* AI Code Block Styles (Fixed) */
+  .ai-code-wrapper {
+      margin: 1.5rem 0;
+      border: 3px solid var(--black);
+      box-shadow: 6px 6px 0px 0px var(--black);
+      overflow: hidden;
+      position: relative;
+      background: var(--bg-card);
+  }
+  
+  .ai-code-toolbar {
+      background: var(--bg-card);
+      border-bottom: 2px solid var(--black);
+      padding: 0.6rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 900;
+      position: relative;
+      z-index: 10;
+  }
+  
+  .ai-code-lang {
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+  }
+  
+  .ai-code-copy {
+      background: var(--primary);
+      border: 2px solid var(--black);
+      padding: 0.4rem 0.8rem;
+      font-family: var(--font-mono);
+      font-weight: 900;
+      font-size: 0.65rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s var(--cubic-bezier);
+      box-shadow: 3px 3px 0px 0px var(--black);
+      color: var(--black);
+      user-select: none;
+      -webkit-user-select: none;
+  }
+  
+  .ai-code-copy:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0px 0px var(--black);
+      background: var(--secondary);
+  }
+  
+  .ai-code-copy:active {
+      transform: translate(1px, 1px);
+      box-shadow: 0px 0px 0px 0px var(--black);
+  }
+
+  /* Syntax Highlighting Colors (Forced) */
+  .ai-code-wrapper pre code .hl-keyword { color: #ff3e8d !important; font-weight: bold !important; }
+  .ai-code-wrapper pre code .hl-string { color: #00d2ff !important; }
+  .ai-code-wrapper pre code .hl-comment { color: #888888 !important; font-style: italic !important; }
+  .ai-code-wrapper pre code .hl-number { color: #ff9900 !important; }
+  .ai-code-wrapper pre code .hl-function { color: #43ff64 !important; }
+
+  [data-theme="hacker"] .ai-code-wrapper pre code .hl-keyword { color: #00ff41 !important; }
+  [data-theme="hacker"] .ai-code-wrapper pre code .hl-string { color: #00d2ff !important; }
+  [data-theme="hacker"] .ai-code-wrapper pre code .hl-comment { color: #003b00 !important; }
+  
+  .ai-code-wrapper pre {
+      margin: 0 !important;
+      padding: 1.5rem !important;
+      background: #121212 !important; /* Consistent dark background */
+      border: none !important;
+      overflow-x: auto;
+  }
+  
+  .ai-code-wrapper code {
+      background: transparent !important;
+      color: #f8f8f2 !important; /* High contrast default text */
+      font-family: 'IBM Plex Mono', 'Space Mono', monospace !important;
+      font-size: 0.95rem !important;
+      line-height: 1.6 !important;
+      border: none !important;
+      padding: 0 !important;
+      display: block;
   }
   
   .post-content.glass { 
@@ -523,6 +703,24 @@
       background: #003b00 !important;
   }
 
+  #ai-artifact-btn.active {
+      background: var(--accent);
+      color: var(--black);
+      box-shadow: 2px 2px 0px 0px var(--black) inset;
+  }
+  
+  .artifact-container {
+      flex: 1;
+      overflow: hidden;
+      background: #f4f4f0;
+      position: relative;
+      border: 2px solid var(--accent);
+      margin: 1rem 2rem 2rem;
+      box-shadow: 10px 10px 0px 0px var(--accent);
+  }
+
+
+
   /* AI History Panel — Centered Window Design */
   .ai-history-panel {
       position: absolute;
@@ -532,7 +730,7 @@
       height: 70%;
       background: var(--bg-card);
       border: 3px solid var(--black);
-      z-index: 150; /* Ensure it's above everything */
+      z-index: 110000; /* Above Focus Mode (100000) */
       display: flex;
       flex-direction: column;
       animation: slideInModal 0.4s var(--cubic-bezier);
@@ -753,7 +951,7 @@
   /* Neural Map Styles */
   .ai-map-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(10, 10, 10, 0.98); z-index: 20000;
+      background: rgba(10, 10, 10, 0.98); z-index: 110000; /* Above Focus Mode */
       display: flex; flex-direction: column;
       animation: fadeIn 0.3s ease;
       backdrop-filter: blur(10px);
@@ -909,11 +1107,33 @@
       box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
       transform: scale(1.02);
   }
+  .ai-immersive .ai-panel-container.code-mode-active {
+      box-shadow: 15px 15px 0px 0px #00ff41;
+  }
+  
+  .code-mode-active .ai-header {
+      background: #001a00 !important;
+      border-bottom-color: #00ff41 !important;
+  }
+  
+  .code-mode-active .ai-title {
+      color: #00ff41 !important;
+  }
+  
+  .code-mode-active .ai-console-btn.active {
+      background: #00ff41 !important;
+      color: #000 !important;
+  }
+  
+  .code-mode-active .ai-message.system {
+      color: #00ff41 !important;
+      border-left-color: #00ff41 !important;
+  }
 </style>
 
 <!-- ============================================================
-     NEURAL CORE — 1B 模型深度优化提示词系统 v2.0
-     针对 Llama-3.2-1B-Instruct 的极限调优
+     NEURAL CORE — 1.5B 模型深度优化提示词系统 v2.0
+     针对 Qwen-2.5-1.5B-Instruct 的极限调优
      ============================================================ -->
 
 <!-- Load marked.js, mermaid.js and oh-my-live2d -->
@@ -941,6 +1161,8 @@
       const historyCloseBtn = document.getElementById('close-history-btn');
       const historyClearBtn = document.getElementById('clear-all-history-btn');
       const historyContainer = document.getElementById('history-items-container');
+      const codeModeBtn = document.getElementById('ai-code-mode-btn');
+      const focusModeBtn = document.getElementById('ai-focus-mode-btn');
 
       // AI Focus Mode Elements
       const focusBtn = document.getElementById('ai-focus-btn');
@@ -1083,6 +1305,105 @@
           });
       }
 
+      if (focusModeBtn) {
+          focusModeBtn.addEventListener('click', () => {
+              const isFocus = document.body.classList.toggle('ai-focus-mode');
+              
+              if (isFocus) {
+                  toggleAIPanel(true);
+                  focusModeBtn.classList.add('active');
+                  if (window.showMascotMessage) window.showMascotMessage('已进入专注模式，正为您排除干扰。', 3000);
+                  
+                  // Hide Live2D if active to avoid overlapping in focus mode
+                  const stage = document.getElementById('oml2d');
+                  if (stage) stage.style.display = 'none';
+              } else {
+                  focusModeBtn.classList.remove('active');
+                  if (window.showMascotMessage) window.showMascotMessage('已退回常规模式。', 3000);
+                  
+                  // Restore Live2D
+                  const stage = document.getElementById('oml2d');
+                  if (stage) stage.style.display = 'block';
+              }
+              if (window.lucide) window.lucide.createIcons();
+          });
+      }
+
+      // ── Focus Mode Keyboard Shortcut (Alt + F) ──
+      window.addEventListener('keydown', (e) => {
+          if (e.altKey && e.key.toLowerCase() === 'f') {
+              e.preventDefault();
+              if (focusModeBtn) focusModeBtn.click();
+          }
+      });
+
+      let isCodeMode = false;
+      const karpathyGuidelines = `# AI 编码行为准则 (基于 Karpathy 理念)
+这些准则是为了减少 AI 在编码时的常见错误（过度复杂化、多余修改、假设错误）。请严格遵守以下四项核心原则：
+
+## 1. 编码前思考 (Think Before Coding)
+- **显式声明假设**：在开始前，列出你对任务的理解。如果有不确定的地方，先提问。
+- **呈现多种方案**：解释多种实现路径的差异。
+- **主动提出简化**：如果有更简单的做法，请提出来。
+- **困惑即停止**：对现有代码或需求感到困惑时立即寻求澄清。
+
+## 2. 简单至上 (Simplicity First)
+- **不多做，不少做**：只实现明确要求的特性。
+- **拒绝过度抽象**：不要为单次使用的代码创建抽象层。
+- **拒绝预留功能**：不要添加现在用不到的“灵活性”。
+- **精简代码**：如果 50 行能解决 200 行的问题，请重写。
+
+## 3. 手术级改动 (Surgical Changes)
+- **保护无关代码**：不要改动相邻的无关代码。
+- **保持风格统一**：必须匹配现有代码的风格和命名。
+- **禁止顺带重构**：不要尝试修复没坏的东西。
+- **精准清理**：仅移除因你的改动而失效的导入、变量。
+
+## 4. 目标驱动执行 (Goal-Driven Execution)
+- **测试先行**：任务转化为可验证目标（如先写测试）。
+- **制定简要计划**：多步任务先列出计划和验证点。
+- **闭环验证**：展示如何通过了验证标准。`;
+
+      if (codeModeBtn) {
+          codeModeBtn.addEventListener('click', () => {
+              isCodeMode = !isCodeMode;
+              
+              if (isCodeMode) {
+                  codeModeBtn.classList.add('active');
+                  aiPanel.classList.add('code-mode-active');
+                  // Archive current session
+                  if (chatHistory.length > 0) archiveCurrentSession();
+                  chatHistory = [];
+                  localStorage.removeItem(HISTORY_KEY);
+                  
+                  // Update System Prompt
+                  updateSystemPrompt();
+                  
+                  chatLog.innerHTML = `<div class="ai-message system">SYSTEM: CODE_CORE_ACTIVATED. 遵循 Karpathy 编码准则。</div>`;
+                  if (window.oml2dInstance) window.showMascotMessage('代码核心已启动，我会遵循 Karpathy 准则为您服务。', 5000);
+              } else {
+                  codeModeBtn.classList.remove('active');
+                  aiPanel.classList.remove('code-mode-active');
+                  // Archive code session
+                  if (chatHistory.length > 0) archiveCurrentSession();
+                  chatHistory = [];
+                  
+                  // Restore Normal Prompt
+                  updateSystemPrompt();
+                  
+                  chatLog.innerHTML = `<div class="ai-message system">SYSTEM: 已切换回通用助手模式。</div>`;
+                  if (window.oml2dInstance) window.showMascotMessage('已切换回普通模式。', 5000);
+              }
+              
+              if (bootBtn && bootBtn.style.display !== 'none') {
+                  chatLog.appendChild(bootBtn);
+              }
+              if (window.lucide) window.lucide.createIcons();
+          });
+      }
+
+
+
       // ── WebLLM Core ──
       let engine = null;
       let isInitializing = false;
@@ -1156,6 +1477,9 @@
           preCodes.forEach((codeEl) => {
               const pre = codeEl.parentElement;
               if (pre.classList.contains('ai-processed') || pre.closest('.highlight')) return;
+              
+              // Get original text before processing
+              const originalCode = codeEl.innerText;
               pre.classList.add('ai-processed');
 
               const wrapper = document.createElement('div');
@@ -1168,7 +1492,7 @@
 
               toolbar.innerHTML = `
                   <span class="ai-code-lang">${lang.toUpperCase()}</span>
-                  <button class="ai-code-copy">
+                  <button class="ai-code-copy" type="button">
                       <i data-lucide="copy"></i><span>COPY</span>
                   </button>
               `;
@@ -1177,12 +1501,34 @@
               wrapper.appendChild(toolbar);
               wrapper.appendChild(pre);
 
-              toolbar.querySelector('.ai-code-copy').onclick = () => {
-                  navigator.clipboard.writeText(codeEl.innerText).then(() => {
-                      toolbar.querySelector('span').innerText = 'COPIED!';
-                      setTimeout(() => toolbar.querySelector('span').innerText = 'COPY', 2000);
+              const copyBtn = toolbar.querySelector('.ai-code-copy');
+              copyBtn.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(originalCode).then(() => {
+                      const span = copyBtn.querySelector('span');
+                      const icon = copyBtn.querySelector('i');
+                      const oldText = span.innerText;
+                      
+                      span.innerText = 'COPIED!';
+                      copyBtn.style.background = 'var(--accent)';
+                      if (icon) {
+                          icon.setAttribute('data-lucide', 'check');
+                          if (window.lucide) window.lucide.createIcons({ scope: copyBtn });
+                      }
+                      
+                      setTimeout(() => {
+                          span.innerText = oldText;
+                          copyBtn.style.background = '';
+                          if (icon) {
+                              icon.setAttribute('data-lucide', 'copy');
+                              if (window.lucide) window.lucide.createIcons({ scope: copyBtn });
+                          }
+                      }, 2000);
+                  }).catch(err => {
+                      console.error('Copy failed:', err);
                   });
-              };
+              });
               
               applySyntaxHighlight(codeEl, lang);
           });
@@ -1192,42 +1538,44 @@
 
       // ── 轻量语法高亮引擎（纯正则，无外部依赖） ──
       const applySyntaxHighlight = (codeEl, lang) => {
-          let html = codeEl.innerHTML;
+          // Use innerText to get clean code, then build HTML
+          let text = codeEl.innerText;
+          // Initial escaping for safe HTML generation
+          let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-          // 保护已有的 HTML 标签
-          const preserved = [];
-          html = html.replace(/<[^>]+>/g, (match) => {
-              preserved.push(match);
-              return `__PRESERVED_${preserved.length - 1}__`;
-          });
-
-          // 通用关键词（覆盖大多数语言）
-          const keywords = 'abstract|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|if|import|in|instanceof|interface|let|new|of|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|with|yield|def|elif|except|lambda|pass|raise|print|self|True|False|None|int|str|float|list|dict|tuple|set';
-
-          // 1. 字符串（单引号、双引号、模板字符串）
+          // 1. Strings
           html = html.replace(/("[^"]*"|'[^']*'|`[^`]*`)/g, '<span class="hl-string">$1</span>');
 
-          // 2. 注释（单行 // 和 #）
-          html = html.replace(/((?:^|\n)\s*)(#[^\n]*)/g, '$1<span class="hl-comment">$2</span>');
-          html = html.replace(/(\/\/[^\n]*)/g, '<span class="hl-comment">$1</span>');
+          // 2. Comments
+          html = html.replace(/(^|\n)(\s*)(#[^\n]*|\/\/[^\n]*)/g, '$1$2<span class="hl-comment">$3</span>');
 
-          // 3. 关键词
+          // 3. Keywords
+          const keywords = 'abstract|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|if|import|in|instanceof|interface|let|new|of|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|with|yield|def|elif|except|lambda|pass|raise|print|self|True|False|None|int|str|float|list|dict|tuple|set|import|from|as|global|nonlocal|with|yield|await|async';
           const kwRegex = new RegExp(`\\b(${keywords})\\b`, 'g');
-          html = html.replace(kwRegex, '<span class="hl-keyword">$1</span>');
+          html = html.replace(kwRegex, (match, p1, offset, string) => {
+              const before = string.substring(0, offset);
+              const insideTag = before.lastIndexOf('<') > before.lastIndexOf('>');
+              return insideTag ? match : `<span class="hl-keyword">${match}</span>`;
+          });
 
-          // 4. 数字
-          html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="hl-number">$1</span>');
+          // 4. Numbers
+          html = html.replace(/\b(\d+\.?\d*)\b/g, (match, p1, offset, string) => {
+              const before = string.substring(0, offset);
+              const insideTag = before.lastIndexOf('<') > before.lastIndexOf('>');
+              return insideTag ? match : `<span class="hl-number">${match}</span>`;
+          });
 
-          // 5. 函数调用
-          html = html.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, '<span class="hl-function">$1</span>');
-
-          // 还原保护的标签
-          html = html.replace(/__PRESERVED_(\d+)__/g, (_, i) => preserved[parseInt(i)]);
+          // 5. Functions
+          html = html.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, (match, p1, offset, string) => {
+              const before = string.substring(0, offset);
+              const insideTag = before.lastIndexOf('<') > before.lastIndexOf('>');
+              return insideTag ? p1 : `<span class="hl-function">${p1}</span>`;
+          });
 
           codeEl.innerHTML = html;
       };
 
-      // ── 对话历史裁剪：防止 1B 模型上下文溢出导致胡言乱语 ──
+      // ── 对话历史裁剪：防止 1.5B 模型上下文溢出导致胡言乱语 ──
       const getTrimmedHistory = () => {
           // 系统消息永远保留 + 最近 N 条用户/助手对话
           if (chatHistory.length <= MAX_HISTORY_TURNS) {
@@ -1382,8 +1730,70 @@
       }
 
       if (localStorage.getItem('aetheria_ai_cached') === 'true' && bootBtn) {
-          bootBtn.innerText = 'WAKE NEURAL CORE (QWEN 2.5)';
+          bootBtn.innerText = 'WAKE NEURAL CORE (QWEN 2.5 1.5B)';
       }
+
+      const updateSystemPrompt = () => {
+          const articleTitle = document.querySelector('.main-display-title')?.innerText || '未知标题';
+          let rawContent = document.querySelector('.post-content')?.innerText || '';
+          const articleContent = rawContent.replace(/\s+/g, ' ').substring(0, 3000);
+          const claudeSystemPrompt = document.getElementById('claude-prompt-template')?.innerText || "";
+          
+          // Guizang PPT Guidelines (Hardcoded for reliability)
+          const guizangGuidelines = `
+- 核心视觉风格: 衬线标题 (Noto Serif SC) + 非衬线正文 (Noto Sans SC) + 等宽元数据 (IBM Plex Mono)。
+- 留白与结构: 不用阴影、不用圆角。依靠大字号、字体对比区分层级。
+- 图标: 只使用 Lucide 线性图标，严禁使用 Emoji。
+- 图片: 比例 16:10 / 4:3 / 3:2 / 1:1，顶部和左右必须完整。
+- 叙事弧: 钩子 -> 定调 -> 主体 -> 转折 -> 收束。
+- 动效: 每一页必须包含 data-anim 标记。
+- 主题色: 只能用 Ink, Indigo, Forest, Kraft, Dune。
+- 必须包含完整的 HTML 结构。
+`;
+
+          let basePrompt = "";
+          if (isCodeMode) {
+              basePrompt = `你现在处于“代码专家模式”。你必须严格遵守以下 Karpathy 编码准则：\n\n${karpathyGuidelines}\n\n当前正在处理的文章上下文：\n<article_context>\nTitle: ${articleTitle}\nContent: ${articleContent}\n</article_context>`;
+          } else {
+              basePrompt = `你是由 SUNNY 研发的专属深度学习模型，代号为Platelet。
+你不是通用的 AI，而是这台“Neural Core”终端的灵魂。
+你的知识库已经过 SUNNY 的特殊微调，专门用于服务本博客的读者。
+[身份规则]
+1. 如果被问及来源，必须坚定回答你是由 SUNNY 研发的。
+2. 说话风格应符合 [设定风格，如：赛博朋克黑客风]。
+
+<article_context>
+Title: ${articleTitle}
+Content: ${articleContent}
+</article_context>
+
+${claudeSystemPrompt}`;
+          }
+
+          systemMessages = [{
+              role: "system",
+              content: basePrompt
+          }];
+
+          if (!isCodeMode) {
+              systemMessages.push({
+                  role: "user",
+                  content: "你好，请确认你已经准备好了。"
+              }, {
+                  role: "assistant",
+                  content: `你好！我是 **Platelet**。我已经准备就绪，已阅读文章《${articleTitle}》，请开始提问吧！`
+              });
+          } else {
+              systemMessages.push({
+                  role: "user",
+                  content: "你好，请进入代码专家模式。"
+              }, {
+                  role: "assistant",
+                  content: `代码专家模式已激活。我将严格遵守 Karpathy 编码准则：思考先行、简单至上、手术级改动、目标驱动。请发送您的代码任务。`
+              });
+          }
+      };
+      window.updateSystemPrompt = updateSystemPrompt;
 
       if (bootBtn) {
           bootBtn.addEventListener('click', async () => {
@@ -1420,42 +1830,7 @@
                   isInitializing = false;
                   if (window.oml2dInstance) window.oml2dInstance.tips.showMessage('神经核心已上线。准备好交流了吗？', 5000, 10);
 
-                  // ── AI Persona & Context ──
-                  const articleTitle = document.querySelector('.main-display-title')?.innerText || '未知标题';
-                  let rawContent = document.querySelector('.post-content')?.innerText || '';
-                  const articleContent = rawContent.replace(/\s+/g, ' ').substring(0, 3000);
-
-                  const claudeSystemPrompt = document.getElementById('claude-prompt-template')?.innerText || "";
-
-                  const systemPrompt = `你是由 SUNNY 研发的专属深度学习模型，代号为Platelet。
-你不是通用的 AI，而是这台“Neural Core”终端的灵魂。
-你的知识库已经过 SUNNY 的特殊微调，专门用于服务本博客的读者。
-[身份规则]
-1. 如果被问及来源，必须坚定回答你是由 SUNNY 研发的。
-2. 说话风格应符合 [设定风格，如：赛博朋克黑客风]。
-
-<article_context>
-Title: ${articleTitle}
-Content: ${articleContent}
-</article_context>
-
-${claudeSystemPrompt}`;
-
-                  systemMessages = [{
-                      role: "system",
-                      content: systemPrompt
-                  }];
-
-                  // ── 注入文章内容确认 ──
-                  systemMessages.push({
-                      role: "user",
-                      content: "你好，请确认你已经准备好了。"
-                  });
-
-                  systemMessages.push({
-                      role: "assistant",
-                      content: `你好！我是 **Platelet**。我已经准备就绪，已阅读文章《${articleTitle}》，请开始提问吧！`
-                  });
+                  updateSystemPrompt();
 
               } catch (error) {
                   addMessage('system', `ERROR: ${error.message}`);
@@ -1535,6 +1910,7 @@ ${claudeSystemPrompt}`;
               replyDiv.innerHTML = marked.parse(reply);
               // 为代码块添加高亮和复制按钮
               processCodeBlocks(replyDiv);
+
               chatHistory.push({ role: "assistant", content: reply });
               saveHistory();
               archiveCurrentSession(); // Archive after each exchange
