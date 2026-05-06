@@ -1,4 +1,4 @@
-import { Post } from '../types';
+import type { Post } from '../types';
 
 export const post2: Post = {
   id: '2',

@@ -15,13 +15,8 @@ if %errorlevel% neq 0 (
 echo [1/3] Staging changes...
 git add .
 
-:: Ask for commit message
-set "msg="
-set /p msg="Enter commit message (press Enter for default 'update blog'): "
-
-if "%msg%"=="" (
-    set msg=update blog %date% %time%
-)
+:: Default commit message
+set msg=auto update: %date% %time%
 
 :: Commit
 echo [2/3] Committing changes...

@@ -1,6 +1,6 @@
 import './style.css'
 import { posts } from './posts/index';
-import { Post } from './types';
+import type { Post } from './types';
 
 // --- Navigation Logic ---
 function navigateTo(viewId: string) {
